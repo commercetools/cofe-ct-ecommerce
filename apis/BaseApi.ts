@@ -2,7 +2,7 @@ import { ApiRoot, createApiBuilderFromCtpClient, Project, ProductType } from '@c
 import { ClientFactory } from '../ClientFactory';
 import { Context } from '@frontastic/extension-types';
 import { getConfig } from '../utils/GetConfig';
-import { Locale } from '../Locale';
+import { Locale } from '../interfaces/Locale';
 import { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk/dist/declarations/src/generated/client/by-project-key-request-builder';
 
 const localeRegex =
