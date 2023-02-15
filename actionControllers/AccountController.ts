@@ -6,12 +6,14 @@ import { AccountExtended as Account } from '../interfaces/AccountExtended';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
 import { CartFetcher } from '../utils/CartFetcher';
 import { getLocale } from '../utils/Request';
-import { EmailApiFactory } from '../utils/EmailApiFactory';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
+import { assertIsAuthenticated } from '../utils/assertIsAuthenticated';
+import { mapRequestToAccount } from '../utils/mapRequestToAccount';
+import { fetchAccountFromSession } from './fetchAccountFromSession';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-type AccountRegisterBody = {
+export type AccountRegisterBody = {
   email?: string;
   password?: string;
   salutation?: string;
@@ -69,63 +71,6 @@ async function loginAccount(request: Request, actionContext: ActionContext, acco
   };
 
   return response;
-}
-
-function assertIsAuthenticated(request: Request) {
-  const account = fetchAccountFromSession(request);
-
-  if (account === undefined) {
-    throw new AccountAuthenticationError({ message: 'Not logged in.' });
-  }
-}
-
-function fetchAccountFromSession(request: Request): Account | undefined {
-  if (request.sessionData?.account !== undefined) {
-    return request.sessionData.account;
-  }
-
-  return undefined;
-}
-
-function parseBirthday(accountRegisterBody: AccountRegisterBody): Date | undefined {
-  if (accountRegisterBody.birthdayYear) {
-    return new Date(
-      +accountRegisterBody.birthdayYear,
-      +accountRegisterBody?.birthdayMonth ?? 1,
-      +accountRegisterBody?.birthdayDay ?? 1,
-    );
-  }
-
-  return null;
-}
-
-function mapRequestToAccount(accountRegisterBody: AccountRegisterBody): Account {
-  const account: Account = {
-    email: accountRegisterBody?.email,
-    password: accountRegisterBody?.password,
-    salutation: accountRegisterBody?.salutation,
-    firstName: accountRegisterBody?.firstName,
-    lastName: accountRegisterBody?.lastName,
-    birthday: parseBirthday(accountRegisterBody),
-    isSubscribed: accountRegisterBody?.isSubscribed,
-    addresses: [],
-  };
-
-  if (accountRegisterBody.billingAddress) {
-    accountRegisterBody.billingAddress.isDefaultBillingAddress = true;
-    accountRegisterBody.billingAddress.isDefaultShippingAddress = !(accountRegisterBody.shippingAddress !== undefined);
-
-    account.addresses.push(accountRegisterBody.billingAddress);
-  }
-
-  if (accountRegisterBody.shippingAddress) {
-    accountRegisterBody.shippingAddress.isDefaultShippingAddress = true;
-    accountRegisterBody.shippingAddress.isDefaultBillingAddress = !(accountRegisterBody.billingAddress !== undefined);
-
-    account.addresses.push(accountRegisterBody.shippingAddress);
-  }
-
-  return account;
 }
 
 export const getAccount: ActionHook = async (request: Request) => {
@@ -212,8 +157,8 @@ export const requestConfirmationEmail: ActionHook = async (request: Request, act
     return response;
   }
 
-  const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
-  emailApi.sendAccountVerificationEmail(account);
+  // const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
+  // emailApi.sendAccountVerificationEmail(account);
 
   const response: Response = {
     statusCode: 200,
@@ -310,13 +255,13 @@ export const requestReset: ActionHook = async (request: Request, actionContext: 
   };
 
   const accountApi = new AccountApi(actionContext.frontasticContext, locale);
-  const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
+  // const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
 
   const accountRequestResetBody: AccountRequestResetBody = JSON.parse(request.body);
 
   const passwordResetToken = await accountApi.generatePasswordResetToken(accountRequestResetBody.email);
 
-  emailApi.sendPasswordResetEmail(accountRequestResetBody as Account, passwordResetToken.token);
+  // emailApi.sendPasswordResetEmail(accountRequestResetBody as Account, passwordResetToken.token);
 
   return {
     statusCode: 200,
@@ -398,10 +343,10 @@ export const updateSubscription: ActionHook = async (request: Request, actionCon
   const isSubscribed: Account['isSubscribed'] = JSON.parse(request.body).isSubscribed;
 
   const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
-  const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, getLocale(request));
+  // const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, getLocale(request));
 
   account = await accountApi.updateSubscription(account, isSubscribed);
-  await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
+  // await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
 
   return {
     statusCode: 200,
