@@ -385,6 +385,7 @@ export abstract class BaseApi {
   protected apiRoot: ApiRoot;
   protected projectKey: string;
   protected locale: string;
+  protected frontasticContext: Context;
 
   constructor(frontasticContext: Context, locale: string) {
     const engine = 'commercetools';
@@ -394,6 +395,7 @@ export abstract class BaseApi {
     this.apiRoot = createApiBuilderFromCtpClient(client);
     this.projectKey = clientSettings.projectKey;
     this.locale = locale;
+    this.frontasticContext = frontasticContext;
   }
 
   protected getApiForProject(): ByProjectKeyRequestBuilder {
