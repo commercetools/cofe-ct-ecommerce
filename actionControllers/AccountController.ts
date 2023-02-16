@@ -39,10 +39,10 @@ type AccountChangePasswordBody = {
 
 export const AccountController = ({
   AccountApi,
-  EmailApiFactory,
+  EmailApi,
 }: {
   AccountApi: new (context: Context, locale: string) => AccountApiType;
-  EmailApiFactory: new (context: Context, locale: string) => EmailApiType;
+  EmailApi?: new (context: Context, locale: string) => EmailApiType;
 }) => {
   async function loginAccount(request: Request, actionContext: ActionContext, account: Account): Promise<Response> {
     const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
@@ -117,11 +117,13 @@ export const AccountController = ({
 
     const account = await accountApi.create(accountData, cart);
 
-    const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
+    if (EmailApi) {
+      const emailApi = new EmailApi(actionContext.frontasticContext, locale);
 
-    emailApi.sendWelcomeCustomerEmail(account);
+      emailApi.sendWelcomeCustomerEmail(account);
 
-    emailApi.sendAccountVerificationEmail(account);
+      emailApi.sendAccountVerificationEmail(account);
+    }
 
     const response: Response = {
       statusCode: 200,
@@ -164,9 +166,10 @@ export const AccountController = ({
       return response;
     }
 
-    const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
-    emailApi.sendAccountVerificationEmail(account);
-
+    if (EmailApi) {
+      const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
+      emailApi.sendAccountVerificationEmail(account);
+    }
     const response: Response = {
       statusCode: 200,
       body: JSON.stringify({}),
@@ -262,13 +265,15 @@ export const AccountController = ({
     };
 
     const accountApi = new AccountApi(actionContext.frontasticContext, locale);
-    const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
 
     const accountRequestResetBody: AccountRequestResetBody = JSON.parse(request.body);
 
     const passwordResetToken = await accountApi.generatePasswordResetToken(accountRequestResetBody.email);
 
-    emailApi.sendPasswordResetEmail(accountRequestResetBody as Account, passwordResetToken.token);
+    if (EmailApi) {
+      const emailApi = new EmailApi(actionContext.frontasticContext, locale);
+      emailApi.sendPasswordResetEmail(accountRequestResetBody as Account, passwordResetToken.token);
+    }
 
     return {
       statusCode: 200,
@@ -350,11 +355,14 @@ export const AccountController = ({
     const isSubscribed: Account['isSubscribed'] = JSON.parse(request.body).isSubscribed;
 
     const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
-    const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, getLocale(request));
 
     account = await accountApi.updateSubscription(account, isSubscribed);
-    await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
 
+    // if (EmailApi) {
+    //   const emailApi = new EmailApi(actionContext.frontasticContext, getLocale(request));
+    //   await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
+    // }
+    
     return {
       statusCode: 200,
       body: JSON.stringify(account),
