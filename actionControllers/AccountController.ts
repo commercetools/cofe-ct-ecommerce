@@ -43,7 +43,7 @@ export const AccountController = ({
 }: {
   AccountApi: new (context: Context, locale: string) => AccountApiType;
   EmailApi?: new (context: Context, locale: string) => EmailApiType;
-}) => {
+}): AccountControllerType => {
   async function loginAccount(request: Request, actionContext: ActionContext, account: Account): Promise<Response> {
     const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
 

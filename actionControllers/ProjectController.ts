@@ -1,4 +1,4 @@
-import { ActionContext, Context, Request, Response } from '@frontastic/extension-types';
+import { ActionContext, ActionHandler, Context, Request, Response } from '@frontastic/extension-types';
 import { getLocale } from '../utils/Request';
 import type { ProjectApi as ProjectApiType } from '../apis/ProjectApi';
 
@@ -8,7 +8,7 @@ export const ProjectController = ({
   ProjectApi,
 }: {
   ProjectApi: new (context: Context, locale: string) => ProjectApiType;
-}) => {
+}): ProjectControllerType => {
   const getProjectSettings: ActionHook = async (request: Request, actionContext: ActionContext) => {
     const projectApi = new ProjectApi(actionContext.frontasticContext, getLocale(request));
 
@@ -26,3 +26,8 @@ export const ProjectController = ({
     getProjectSettings,
   };
 };
+
+export interface ProjectControllerType {
+  [actionIdentifier: string]: ActionHandler;
+  getProjectSettings: ActionHandler;
+}

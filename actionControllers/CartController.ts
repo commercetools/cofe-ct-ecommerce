@@ -1,4 +1,4 @@
-import { Request, Response, ActionContext, Context } from '@frontastic/extension-types';
+import { Request, Response, ActionContext, Context, ActionHandler } from '@frontastic/extension-types';
 import { Cart } from '@commercetools/frontend-domain-types/cart/Cart';
 import { LineItem } from '@commercetools/frontend-domain-types/cart/LineItem';
 import { Discount } from '@commercetools/frontend-domain-types/cart/Discount';
@@ -13,7 +13,11 @@ import type { CartApi as CartApiType } from '../apis/CartApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-export const CartController = ({ CartApi }: { CartApi: new (context: Context, locale: string) => CartApiType }) => {
+export const CartController = ({
+  CartApi,
+}: {
+  CartApi: new (context: Context, locale: string) => CartApiType;
+}): CartControllerType => {
   async function updateCartFromRequest(request: Request, actionContext: ActionContext): Promise<Cart> {
     const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
     let cart = await CartFetcher.fetchCart(request, actionContext);
@@ -410,3 +414,21 @@ export const CartController = ({ CartApi }: { CartApi: new (context: Context, lo
     removeDiscount,
   };
 };
+
+export interface CartControllerType {
+  [actionIdentifier: string]: ActionHandler;
+  getCart: ActionHandler;
+  addToCart: ActionHandler;
+  updateLineItem: ActionHandler;
+  removeLineItem: ActionHandler;
+  updateCart: ActionHandler;
+  checkout: ActionHandler;
+  getOrders: ActionHandler;
+  getShippingMethods: ActionHandler;
+  getAvailableShippingMethods: ActionHandler;
+  setShippingMethod: ActionHandler;
+  addPaymentByInvoice: ActionHandler;
+  updatePayment: ActionHandler;
+  redeemDiscount: ActionHandler;
+  removeDiscount: ActionHandler;
+}

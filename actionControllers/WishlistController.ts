@@ -1,4 +1,4 @@
-import { ActionContext, Context, Request, Response } from '@frontastic/extension-types';
+import { ActionContext, ActionHandler, Context, Request, Response } from '@frontastic/extension-types';
 import { Guid } from '../utils/Guid';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
 import { getLocale } from '../utils/Request';
@@ -9,7 +9,7 @@ export const WishlistController = ({
   WishlistApi,
 }: {
   WishlistApi: new (context: Context, locale: string) => WishlistApiType;
-}) => {
+}): WishlistControllerType => {
   function getWishlistApi(request: Request, actionContext: ActionContext) {
     return new WishlistApi(actionContext.frontasticContext, getLocale(request));
   }
@@ -178,3 +178,13 @@ export const WishlistController = ({
     updateLineItemCount,
   };
 };
+
+export interface WishlistControllerType {
+  [actionIdentifier: string]: ActionHandler;
+  getWishlist: ActionHandler;
+  createWishlist: ActionHandler;
+  addToWishlist: ActionHandler;
+  removeLineItem: ActionHandler;
+  clearWishlist: ActionHandler;
+  updateLineItemCount: ActionHandler;
+}
