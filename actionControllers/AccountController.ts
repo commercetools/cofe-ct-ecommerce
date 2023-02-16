@@ -1,4 +1,4 @@
-import { ActionHandler, Context, Request, Response } from '@frontastic/extension-types';
+import { ActionHandler, ActionRegistry, Context, Request, Response } from '@frontastic/extension-types';
 import { ActionContext } from '@frontastic/extension-types';
 import { AccountExtended as Account } from '../interfaces/AccountExtended';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
@@ -544,6 +544,7 @@ export const AccountController = ({
 };
 
 export interface AccountControllerType {
+  [actionIdentifier: string]: ActionHandler;
   getAccount: ActionHandler;
   register: ActionHandler;
   requestConfirmationEmail: ActionHandler;
