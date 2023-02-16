@@ -1,4 +1,4 @@
-import { Context, Request, Response } from '@frontastic/extension-types';
+import { ActionHandler, Context, Request, Response } from '@frontastic/extension-types';
 import { ActionContext } from '@frontastic/extension-types';
 import { AccountExtended as Account } from '../interfaces/AccountExtended';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
@@ -362,7 +362,7 @@ export const AccountController = ({
     //   const emailApi = new EmailApi(actionContext.frontasticContext, getLocale(request));
     //   await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
     // }
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify(account),
@@ -542,3 +542,25 @@ export const AccountController = ({
     setDefaultShippingAddress,
   };
 };
+
+export interface AccountControllerType {
+  getAccount: ActionHandler;
+  register: ActionHandler;
+  requestConfirmationEmail: ActionHandler;
+  confirm: ActionHandler;
+  login: ActionHandler;
+  logout: ActionHandler;
+  password: ActionHandler;
+  requestReset: ActionHandler;
+  reset: ActionHandler;
+  update: ActionHandler;
+  addIsSubscribedType: ActionHandler;
+  updateSubscription: ActionHandler;
+  addAddress: ActionHandler;
+  addShippingAddress: ActionHandler;
+  addBillingAddress: ActionHandler;
+  updateAddress: ActionHandler;
+  removeAddress: ActionHandler;
+  setDefaultBillingAddress: ActionHandler;
+  setDefaultShippingAddress: ActionHandler;
+}
