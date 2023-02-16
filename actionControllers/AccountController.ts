@@ -167,7 +167,7 @@ export const AccountController = ({
     }
 
     if (EmailApi) {
-      const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
+      const emailApi = new EmailApi(actionContext.frontasticContext, locale);
       emailApi.sendAccountVerificationEmail(account);
     }
     const response: Response = {
