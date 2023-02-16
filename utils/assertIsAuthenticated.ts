@@ -1,6 +1,6 @@
 import { Request } from '@frontastic/extension-types';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
-import { fetchAccountFromSession } from "../actionControllers/fetchAccountFromSession";
+import { fetchAccountFromSession } from "./fetchAccountFromSession";
 
 export function assertIsAuthenticated(request: Request) {
   const account = fetchAccountFromSession(request);
