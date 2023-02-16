@@ -1,4 +1,4 @@
-import { Request, Response, ActionContext } from '@frontastic/extension-types';
+import { Request, Response, ActionContext, Context, ActionHandler } from '@frontastic/extension-types';
 import { Cart } from '@commercetools/frontend-domain-types/cart/Cart';
 import { LineItem } from '@commercetools/frontend-domain-types/cart/LineItem';
 import { Discount } from '@commercetools/frontend-domain-types/cart/Discount';
@@ -6,366 +6,262 @@ import { Address } from '@commercetools/frontend-domain-types/account/Address';
 import { CartFetcher } from '../utils/CartFetcher';
 import { ShippingMethod } from '@commercetools/frontend-domain-types/cart/ShippingMethod';
 import { Payment, PaymentStatuses } from '@commercetools/frontend-domain-types/cart/Payment';
-import { CartApi } from '../apis/CartApi';
 import { getLocale } from '../utils/Request';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
 import { CartRedeemDiscountCodeError } from '../errors/CartRedeemDiscountCodeError';
+import type { CartApi as CartApiType } from '../apis/CartApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-async function updateCartFromRequest(request: Request, actionContext: ActionContext): Promise<Cart> {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  let cart = await CartFetcher.fetchCart(request, actionContext);
+export const CartController = ({
+  CartApi,
+}: {
+  CartApi: new (context: Context, locale: string) => CartApiType;
+}): CartControllerType => {
+  async function updateCartFromRequest(request: Request, actionContext: ActionContext): Promise<Cart> {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    let cart = await CartFetcher.fetchCart(request, actionContext);
 
-  if (request?.body === undefined || request?.body === '') {
+    if (request?.body === undefined || request?.body === '') {
+      return cart;
+    }
+
+    const body: {
+      account?: { email?: string };
+      shipping?: Address;
+      billing?: Address;
+    } = JSON.parse(request.body);
+
+    if (body?.account?.email !== undefined) {
+      cart = await cartApi.setEmail(cart, body.account.email);
+    }
+
+    if (body?.shipping !== undefined || body?.billing !== undefined) {
+      const shippingAddress = body?.shipping !== undefined ? body.shipping : body.billing;
+      const billingAddress = body?.billing !== undefined ? body.billing : body.shipping;
+
+      cart = await cartApi.setShippingAddress(cart, shippingAddress);
+      cart = await cartApi.setBillingAddress(cart, billingAddress);
+    }
+
     return cart;
   }
+  const getCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cart = await CartFetcher.fetchCart(request, actionContext);
+    const cartId = cart.cartId;
 
-  const body: {
-    account?: { email?: string };
-    shipping?: Address;
-    billing?: Address;
-  } = JSON.parse(request.body);
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
 
-  if (body?.account?.email !== undefined) {
-    cart = await cartApi.setEmail(cart, body.account.email);
-  }
-
-  if (body?.shipping !== undefined || body?.billing !== undefined) {
-    const shippingAddress = body?.shipping !== undefined ? body.shipping : body.billing;
-    const billingAddress = body?.billing !== undefined ? body.billing : body.shipping;
-
-    cart = await cartApi.setShippingAddress(cart, shippingAddress);
-    cart = await cartApi.setBillingAddress(cart, billingAddress);
-  }
-
-  return cart;
-}
-
-export const getCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cart = await CartFetcher.fetchCart(request, actionContext);
-  const cartId = cart.cartId;
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    return response;
   };
 
-  return response;
-};
+  const addToCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
 
-export const addToCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const body: {
+      variant?: { sku?: string; count: number };
+    } = JSON.parse(request.body);
 
-  const body: {
-    variant?: { sku?: string; count: number };
-  } = JSON.parse(request.body);
+    const lineItem: LineItem = {
+      variant: {
+        sku: body.variant?.sku || undefined,
+        price: undefined,
+      },
+      count: +body.variant?.count || 1,
+    };
 
-  const lineItem: LineItem = {
-    variant: {
-      sku: body.variant?.sku || undefined,
-      price: undefined,
-    },
-    count: +body.variant?.count || 1,
+    let cart = await CartFetcher.fetchCart(request, actionContext);
+    cart = await cartApi.addToCart(cart, lineItem);
+
+    const cartId = cart.cartId;
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
+
+    return response;
   };
 
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-  cart = await cartApi.addToCart(cart, lineItem);
+  const updateLineItem: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
 
-  const cartId = cart.cartId;
+    const body: {
+      lineItem?: { id?: string; count: number };
+    } = JSON.parse(request.body);
 
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    const lineItem: LineItem = {
+      lineItemId: body.lineItem?.id,
+      count: +body.lineItem?.count || 1,
+    };
+
+    let cart = await CartFetcher.fetchCart(request, actionContext);
+    cart = await cartApi.updateLineItem(cart, lineItem);
+
+    const cartId = cart.cartId;
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
+
+    return response;
   };
 
-  return response;
-};
+  const removeLineItem: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
 
-export const updateLineItem: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const body: {
+      lineItem?: { id?: string };
+    } = JSON.parse(request.body);
 
-  const body: {
-    lineItem?: { id?: string; count: number };
-  } = JSON.parse(request.body);
+    const lineItem: LineItem = {
+      lineItemId: body.lineItem?.id,
+    };
 
-  const lineItem: LineItem = {
-    lineItemId: body.lineItem?.id,
-    count: +body.lineItem?.count || 1,
+    let cart = await CartFetcher.fetchCart(request, actionContext);
+    cart = await cartApi.removeLineItem(cart, lineItem);
+
+    const cartId = cart.cartId;
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
+
+    return response;
   };
 
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-  cart = await cartApi.updateLineItem(cart, lineItem);
+  const updateCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cart = await updateCartFromRequest(request, actionContext);
+    const cartId = cart.cartId;
 
-  const cartId = cart.cartId;
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
 
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    return response;
   };
 
-  return response;
-};
+  const checkout: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const locale = getLocale(request);
 
-export const removeLineItem: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const cartApi = new CartApi(actionContext.frontasticContext, locale);
 
-  const body: {
-    lineItem?: { id?: string };
-  } = JSON.parse(request.body);
+    const cart = await updateCartFromRequest(request, actionContext);
 
-  const lineItem: LineItem = {
-    lineItemId: body.lineItem?.id,
+    const order = await cartApi.order(cart);
+
+    // Unset the cartId
+    const cartId: string = undefined;
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(order),
+      sessionData: {
+        ...request.sessionData,
+        cartId,
+      },
+    };
+
+    return response;
   };
 
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-  cart = await cartApi.removeLineItem(cart, lineItem);
+  const getOrders: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
 
-  const cartId = cart.cartId;
+    const account = request.sessionData?.account !== undefined ? request.sessionData.account : undefined;
 
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    if (account === undefined) {
+      throw new AccountAuthenticationError({ message: 'Not logged in.' });
+    }
+
+    const orders = await cartApi.getOrders(account);
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(orders),
+      sessionData: {
+        ...request.sessionData,
+      },
+    };
+    return response;
   };
 
-  return response;
-};
+  const getShippingMethods: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const onlyMatching = request.query.onlyMatching === 'true';
 
-export const updateCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cart = await updateCartFromRequest(request, actionContext);
-  const cartId = cart.cartId;
+    const shippingMethods = await cartApi.getShippingMethods(onlyMatching);
 
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(shippingMethods),
+      sessionData: {
+        ...request.sessionData,
+      },
+    };
+
+    return response;
   };
 
-  return response;
-};
+  const getAvailableShippingMethods: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const cart = await CartFetcher.fetchCart(request, actionContext);
 
-export const checkout: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const locale = getLocale(request);
+    const availableShippingMethods = await cartApi.getAvailableShippingMethods(cart);
 
-  const cartApi = new CartApi(actionContext.frontasticContext, locale);
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(availableShippingMethods),
+      sessionData: {
+        ...request.sessionData,
+        cartId: cart.cartId,
+      },
+    };
 
-  const cart = await updateCartFromRequest(request, actionContext);
-
-  const order = await cartApi.order(cart);
-
-  // Unset the cartId
-  const cartId: string = undefined;
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(order),
-    sessionData: {
-      ...request.sessionData,
-      cartId,
-    },
+    return response;
   };
 
-  return response;
-};
+  const setShippingMethod: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    let cart = await CartFetcher.fetchCart(request, actionContext);
 
-export const getOrders: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const body: {
+      shippingMethod?: { id?: string };
+    } = JSON.parse(request.body);
 
-  const account = request.sessionData?.account !== undefined ? request.sessionData.account : undefined;
+    const shippingMethod: ShippingMethod = {
+      shippingMethodId: body.shippingMethod?.id,
+    };
 
-  if (account === undefined) {
-    throw new AccountAuthenticationError({ message: 'Not logged in.' });
-  }
+    cart = await cartApi.setShippingMethod(cart, shippingMethod);
 
-  const orders = await cartApi.getOrders(account);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(orders),
-    sessionData: {
-      ...request.sessionData,
-    },
-  };
-  return response;
-};
-
-export const getShippingMethods: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  const onlyMatching = request.query.onlyMatching === 'true';
-
-  const shippingMethods = await cartApi.getShippingMethods(onlyMatching);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(shippingMethods),
-    sessionData: {
-      ...request.sessionData,
-    },
-  };
-
-  return response;
-};
-
-export const getAvailableShippingMethods: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  const cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const availableShippingMethods = await cartApi.getAvailableShippingMethods(cart);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(availableShippingMethods),
-    sessionData: {
-      ...request.sessionData,
-      cartId: cart.cartId,
-    },
-  };
-
-  return response;
-};
-
-export const setShippingMethod: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const body: {
-    shippingMethod?: { id?: string };
-  } = JSON.parse(request.body);
-
-  const shippingMethod: ShippingMethod = {
-    shippingMethodId: body.shippingMethod?.id,
-  };
-
-  cart = await cartApi.setShippingMethod(cart, shippingMethod);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId: cart.cartId,
-    },
-  };
-
-  return response;
-};
-
-export const addPaymentByInvoice: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const body: {
-    payment?: Payment;
-  } = JSON.parse(request.body);
-
-  const payment: Payment = {
-    ...body.payment,
-    paymentProvider: 'frontastic',
-    paymentMethod: 'invoice',
-    paymentStatus: PaymentStatuses.PENDING,
-  };
-
-  if (payment.amountPlanned === undefined) {
-    payment.amountPlanned = {};
-  }
-
-  payment.amountPlanned.centAmount = payment.amountPlanned.centAmount ?? cart.sum.centAmount ?? undefined;
-  payment.amountPlanned.currencyCode = payment.amountPlanned.currencyCode ?? cart.sum.currencyCode ?? undefined;
-
-  cart = await cartApi.addPayment(cart, payment);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId: cart.cartId,
-    },
-  };
-
-  return response;
-};
-
-/*
-export const getPayment: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-
-  const id = 'fd9b52ff-204b-4986-b13d-b25f53ac3343';
-
-  const amount: any = {
-    centAmount: 1000,
-    currencyCode: 'EUR'
-  };
-
-  let payment = await cartApi.getPayment(id);
-
-  payment = await cartApi.updateOrderPayment(id, payment.body.version, PaymentStatuses.PENDING, 'Payment method', amount);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(payment),
-    sessionData: request.sessionData,
-  };
-
-  return response;
-}
-*/
-
-export const updatePayment: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  const cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const body: {
-    payment?: Payment;
-  } = JSON.parse(request.body);
-
-  const payment = await cartApi.updatePayment(cart, body.payment);
-
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(payment),
-    sessionData: {
-      ...request.sessionData,
-      cartId: cart.cartId,
-    },
-  };
-
-  return response;
-};
-
-export const redeemDiscount: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const body: {
-    code?: string;
-  } = JSON.parse(request.body);
-
-  let response: Response;
-
-  try {
-    cart = await cartApi.redeemDiscountCode(cart, body.code);
-
-    response = {
+    const response: Response = {
       statusCode: 200,
       body: JSON.stringify(cart),
       sessionData: {
@@ -373,48 +269,166 @@ export const redeemDiscount: ActionHook = async (request: Request, actionContext
         cartId: cart.cartId,
       },
     };
-  } catch (error) {
-    if (error instanceof CartRedeemDiscountCodeError) {
+
+    return response;
+  };
+
+  const addPaymentByInvoice: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    let cart = await CartFetcher.fetchCart(request, actionContext);
+
+    const body: {
+      payment?: Payment;
+    } = JSON.parse(request.body);
+
+    const payment: Payment = {
+      ...body.payment,
+      paymentProvider: 'frontastic',
+      paymentMethod: 'invoice',
+      paymentStatus: PaymentStatuses.PENDING,
+    };
+
+    if (payment.amountPlanned === undefined) {
+      payment.amountPlanned = {};
+    }
+
+    payment.amountPlanned.centAmount = payment.amountPlanned.centAmount ?? cart.sum.centAmount ?? undefined;
+    payment.amountPlanned.currencyCode = payment.amountPlanned.currencyCode ?? cart.sum.currencyCode ?? undefined;
+
+    cart = await cartApi.addPayment(cart, payment);
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId: cart.cartId,
+      },
+    };
+
+    return response;
+  };
+
+  const updatePayment: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    const cart = await CartFetcher.fetchCart(request, actionContext);
+
+    const body: {
+      payment?: Payment;
+    } = JSON.parse(request.body);
+
+    const payment = await cartApi.updatePayment(cart, body.payment);
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(payment),
+      sessionData: {
+        ...request.sessionData,
+        cartId: cart.cartId,
+      },
+    };
+
+    return response;
+  };
+
+  const redeemDiscount: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    let cart = await CartFetcher.fetchCart(request, actionContext);
+
+    const body: {
+      code?: string;
+    } = JSON.parse(request.body);
+
+    let response: Response;
+
+    try {
+      cart = await cartApi.redeemDiscountCode(cart, body.code);
+
       response = {
-        statusCode: error.status,
-        body: JSON.stringify(error.message),
+        statusCode: 200,
+        body: JSON.stringify(cart),
         sessionData: {
           ...request.sessionData,
           cartId: cart.cartId,
         },
       };
+    } catch (error) {
+      if (error instanceof CartRedeemDiscountCodeError) {
+        response = {
+          statusCode: error.status,
+          body: JSON.stringify(error.message),
+          sessionData: {
+            ...request.sessionData,
+            cartId: cart.cartId,
+          },
+        };
 
-      return response;
+        return response;
+      }
+
+      throw error;
     }
 
-    throw error;
-  }
-
-  return response;
-};
-
-export const removeDiscount: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
-  let cart = await CartFetcher.fetchCart(request, actionContext);
-
-  const body: {
-    discountId?: string;
-  } = JSON.parse(request.body);
-
-  const discount: Discount = {
-    discountId: body?.discountId,
+    return response;
   };
 
-  cart = await cartApi.removeDiscountCode(cart, discount);
+  const removeDiscount: ActionHook = async (request: Request, actionContext: ActionContext) => {
+    const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+    let cart = await CartFetcher.fetchCart(request, actionContext);
 
-  const response: Response = {
-    statusCode: 200,
-    body: JSON.stringify(cart),
-    sessionData: {
-      ...request.sessionData,
-      cartId: cart.cartId,
-    },
+    const body: {
+      discountId?: string;
+    } = JSON.parse(request.body);
+
+    const discount: Discount = {
+      discountId: body?.discountId,
+    };
+
+    cart = await cartApi.removeDiscountCode(cart, discount);
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(cart),
+      sessionData: {
+        ...request.sessionData,
+        cartId: cart.cartId,
+      },
+    };
+
+    return response;
   };
-
-  return response;
+  return {
+    getCart,
+    addToCart,
+    updateLineItem,
+    removeLineItem,
+    updateCart,
+    checkout,
+    getOrders,
+    getShippingMethods,
+    getAvailableShippingMethods,
+    setShippingMethod,
+    addPaymentByInvoice,
+    updatePayment,
+    redeemDiscount,
+    removeDiscount,
+  };
 };
+
+export interface CartControllerType {
+  [actionIdentifier: string]: ActionHandler;
+  getCart: ActionHandler;
+  addToCart: ActionHandler;
+  updateLineItem: ActionHandler;
+  removeLineItem: ActionHandler;
+  updateCart: ActionHandler;
+  checkout: ActionHandler;
+  getOrders: ActionHandler;
+  getShippingMethods: ActionHandler;
+  getAvailableShippingMethods: ActionHandler;
+  setShippingMethod: ActionHandler;
+  addPaymentByInvoice: ActionHandler;
+  updatePayment: ActionHandler;
+  redeemDiscount: ActionHandler;
+  removeDiscount: ActionHandler;
+}
