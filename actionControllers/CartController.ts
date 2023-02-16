@@ -1,4 +1,4 @@
-import { Request, Response, ActionContext } from '@frontastic/extension-types';
+import { Request, Response, ActionContext, Context } from '@frontastic/extension-types';
 import { Cart } from '@commercetools/frontend-domain-types/cart/Cart';
 import { LineItem } from '@commercetools/frontend-domain-types/cart/LineItem';
 import { Discount } from '@commercetools/frontend-domain-types/cart/Discount';
@@ -9,10 +9,11 @@ import { Payment, PaymentStatuses } from '@commercetools/frontend-domain-types/c
 import { getLocale } from '../utils/Request';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
 import { CartRedeemDiscountCodeError } from '../errors/CartRedeemDiscountCodeError';
+import type { CartApi as CartApiType } from '../apis/CartApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-export const CartController = ({ CartApi }) => {
+export const CartController = ({ CartApi }: { CartApi: new (context: Context, locale: string) => CartApiType }) => {
   async function updateCartFromRequest(request: Request, actionContext: ActionContext): Promise<Cart> {
     const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
     let cart = await CartFetcher.fetchCart(request, actionContext);

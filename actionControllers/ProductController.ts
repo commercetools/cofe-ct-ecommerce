@@ -1,13 +1,14 @@
-import { Request, Response } from '@frontastic/extension-types';
+import { Context, Request, Response } from '@frontastic/extension-types';
 import { ActionContext } from '@frontastic/extension-types';
 import { ProductQueryFactory } from '../utils/ProductQueryFactory';
 import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
 import { CategoryQuery } from '../interfaces/CategoryQuery';
 import { getLocale } from '../utils/Request';
+import type { ProductApi as ProductApiType } from '../apis/ProductApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-export const ProductController = ({ ProductApi }) => {
+export const ProductController = ({ ProductApi }: { ProductApi: (new (context: Context, locale: string) => ProductApiType) }) => {
   const getProduct: ActionHook = async (request: Request, actionContext: ActionContext) => {
     const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
 

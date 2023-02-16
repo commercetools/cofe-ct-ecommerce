@@ -1,4 +1,4 @@
-import { Request, Response } from '@frontastic/extension-types';
+import { Context, Request, Response } from '@frontastic/extension-types';
 import { ActionContext } from '@frontastic/extension-types';
 import { AccountExtended as Account } from '../interfaces/AccountExtended';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
@@ -8,6 +8,8 @@ import { AccountAuthenticationError } from '../errors/AccountAuthenticationError
 import { assertIsAuthenticated } from '../utils/assertIsAuthenticated';
 import { mapRequestToAccount } from '../utils/mapRequestToAccount';
 import { fetchAccountFromSession } from '../utils/fetchAccountFromSession';
+import type { AccountApi as AccountApiType } from '../apis/AccountApi';
+import type { EmailApi as EmailApiType } from '../apis/EmailApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
@@ -35,7 +37,13 @@ type AccountChangePasswordBody = {
   newPassword: string;
 };
 
-export const AccountController = ({ AccountApi, EmailApiFactory }) => {
+export const AccountController = ({
+  AccountApi,
+  EmailApiFactory,
+}: {
+  AccountApi: new (context: Context, locale: string) => AccountApiType;
+  EmailApiFactory: new (context: Context, locale: string) => EmailApiType;
+}) => {
   async function loginAccount(request: Request, actionContext: ActionContext, account: Account): Promise<Response> {
     const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
 
@@ -108,8 +116,8 @@ export const AccountController = ({ AccountApi, EmailApiFactory }) => {
     const cart = await CartFetcher.fetchCart(request, actionContext);
 
     const account = await accountApi.create(accountData, cart);
-    
-  const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
+
+    const emailApi = EmailApiFactory.getDefaultApi(actionContext.frontasticContext, locale);
 
     emailApi.sendWelcomeCustomerEmail(account);
 

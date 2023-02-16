@@ -1,10 +1,15 @@
-import { ActionContext, Request, Response } from '@frontastic/extension-types';
+import { ActionContext, Context, Request, Response } from '@frontastic/extension-types';
 import { Guid } from '../utils/Guid';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
 import { getLocale } from '../utils/Request';
+import type { WishlistApi as WishlistApiType } from '../apis/WishlistApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
-export const WishlistController = ({ WishlistApi }) => {
+export const WishlistController = ({
+  WishlistApi,
+}: {
+  WishlistApi: new (context: Context, locale: string) => WishlistApiType;
+}) => {
   function getWishlistApi(request: Request, actionContext: ActionContext) {
     return new WishlistApi(actionContext.frontasticContext, getLocale(request));
   }
