@@ -12,6 +12,7 @@ import {
   TermFacetResult as CommercetoolsTermFacetResult,
   TypedMoney,
   Price as CommercetoolsPrice,
+  AttributeGroup,
 } from '@commercetools/platform-sdk';
 import { Product } from '@commercetools/frontend-domain-types/product/Product';
 import { Variant } from '@commercetools/frontend-domain-types/product/Variant';
@@ -576,6 +577,11 @@ export class ProductMapper {
     }
     return rangeFacet;
   }
+
+  static commercetoolsAttributeGroupToString(body: AttributeGroup): string[] {
+    return body.attributes.map((attribute) => attribute.key);
+  }
+
 
   static calculatePreviousCursor(offset: number, count: number) {
     return offset - count >= 0 ? `offset:${offset - count}` : undefined;
