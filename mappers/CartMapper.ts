@@ -30,10 +30,7 @@ import { TaxPortion } from '@commercetools/frontend-domain-types/cart/TaxPortion
 import { Discount } from '@commercetools/frontend-domain-types/cart/Discount';
 
 export class CartMapper {
-  static commercetoolsCartToCart: (commercetoolsCart: CommercetoolsCart, locale: Locale) => Cart = (
-    commercetoolsCart: CommercetoolsCart,
-    locale: Locale,
-  ) => {
+  static commercetoolsCartToCart(commercetoolsCart: CommercetoolsCart, locale: Locale): Cart {
     return {
       cartId: commercetoolsCart.id,
       cartVersion: commercetoolsCart.version.toString(),
@@ -47,12 +44,12 @@ export class CartMapper {
       discountCodes: this.commercetoolsDiscountCodesInfoToDiscountCodes(commercetoolsCart.discountCodes, locale),
       taxed: this.commercetoolsTaxedPriceToTaxed(commercetoolsCart.taxedPrice, locale),
     };
-  };
+  }
 
-  static commercetoolsLineItemsToLineItems: (
+  static commercetoolsLineItemsToLineItems(
     commercetoolsLineItems: CommercetoolsLineItem[],
     locale: Locale,
-  ) => LineItem[] = (commercetoolsLineItems: CommercetoolsLineItem[], locale: Locale) => {
+  ): LineItem[] {
     const lineItems: LineItem[] = [];
 
     commercetoolsLineItems?.forEach((commercetoolsLineItem) => {
@@ -83,11 +80,9 @@ export class CartMapper {
     });
 
     return lineItems;
-  };
+  }
 
-  static commercetoolsAddressToAddress: (commercetoolsAddress: CommercetoolsAddress) => Address = (
-    commercetoolsAddress: CommercetoolsAddress,
-  ) => {
+  static commercetoolsAddressToAddress(commercetoolsAddress: CommercetoolsAddress): Address {
     return {
       addressId: commercetoolsAddress?.id,
       salutation: commercetoolsAddress?.salutation,
@@ -103,9 +98,9 @@ export class CartMapper {
       state: commercetoolsAddress?.state,
       phone: commercetoolsAddress?.phone,
     } as Address;
-  };
+  }
 
-  static addressToCommercetoolsAddress: (address: Address) => CommercetoolsAddress = (address: Address) => {
+  static addressToCommercetoolsAddress(address: Address): CommercetoolsAddress {
     return {
       id: address?.addressId,
       salutation: address?.salutation,
@@ -121,12 +116,9 @@ export class CartMapper {
       state: address?.state,
       phone: address?.phone,
     } as CommercetoolsAddress;
-  };
+  }
 
-  static commercetoolsOrderToOrder: (commercetoolsOrder: CommercetoolsOrder, locale: Locale) => Order = (
-    commercetoolsOrder: CommercetoolsOrder,
-    locale: Locale,
-  ) => {
+  static commercetoolsOrderToOrder(commercetoolsOrder: CommercetoolsOrder, locale: Locale): Order {
     return {
       cartId: commercetoolsOrder.id,
       orderState: commercetoolsOrder.orderState,
@@ -143,12 +135,12 @@ export class CartMapper {
       // discountCodes:
       // taxed:
     } as Order;
-  };
+  }
 
-  static commercetoolsShippingInfoToShippingInfo: (
+  static commercetoolsShippingInfoToShippingInfo(
     commercetoolsShippingInfo: CommercetoolsShippingInfo | undefined,
     locale: Locale,
-  ) => ShippingInfo | undefined = (commercetoolsShippingInfo: CommercetoolsShippingInfo, locale: Locale) => {
+  ): ShippingInfo | undefined {
     if (commercetoolsShippingInfo === undefined) {
       return undefined;
     }
@@ -167,12 +159,12 @@ export class CartMapper {
       ...shippingMethod,
       price: ProductMapper.commercetoolsMoneyToMoney(commercetoolsShippingInfo.price),
     };
-  };
+  }
 
-  static commercetoolsShippingMethodToShippingMethod: (
+  static commercetoolsShippingMethodToShippingMethod(
     commercetoolsShippingMethod: CommercetoolsShippingMethod,
     locale: Locale,
-  ) => ShippingMethod = (commercetoolsShippingMethod: CommercetoolsShippingMethod, locale: Locale) => {
+  ): ShippingMethod {
     return {
       shippingMethodId: commercetoolsShippingMethod?.id || undefined,
       name:
@@ -183,12 +175,12 @@ export class CartMapper {
         undefined,
       rates: this.commercetoolsZoneRatesToRates(commercetoolsShippingMethod?.zoneRates, locale),
     } as ShippingMethod;
-  };
+  }
 
-  static commercetoolsZoneRatesToRates: (
+  static commercetoolsZoneRatesToRates(
     commercetoolsZoneRates: CommercetoolsZoneRate[] | undefined,
     locale: Locale,
-  ) => ShippingRate[] | undefined = (commercetoolsZoneRates: CommercetoolsZoneRate[] | undefined, locale: Locale) => {
+  ): ShippingRate[] | undefined {
     if (commercetoolsZoneRates === undefined) {
       return undefined;
     }
@@ -225,12 +217,12 @@ export class CartMapper {
     });
 
     return shippingRates;
-  };
+  }
 
-  static commercetoolsPaymentInfoToPayments: (
+  static commercetoolsPaymentInfoToPayments(
     commercetoolsPaymentInfo: CommercetoolsPaymentInfo | undefined,
     locale: Locale,
-  ) => Payment[] = (commercetoolsPaymentInfo: CommercetoolsPaymentInfo | undefined, locale: Locale) => {
+  ): Payment[] {
     const payments: Payment[] = [];
 
     commercetoolsPaymentInfo?.payments?.forEach((commercetoolsPayment) => {
@@ -240,12 +232,9 @@ export class CartMapper {
     });
 
     return payments;
-  };
+  }
 
-  static commercetoolsPaymentToPayment: (commercetoolsPayment: CommercetoolsPayment, locale: Locale) => Payment = (
-    commercetoolsPayment: CommercetoolsPayment,
-    locale: Locale,
-  ) => {
+  static commercetoolsPaymentToPayment(commercetoolsPayment: CommercetoolsPayment, locale: Locale): Payment {
     return {
       id: commercetoolsPayment.id ?? null,
       paymentId: commercetoolsPayment.interfaceId ?? null,
@@ -256,12 +245,12 @@ export class CartMapper {
       paymentStatus: commercetoolsPayment.paymentStatus.interfaceCode ?? null,
       version: commercetoolsPayment.version ?? 0,
     };
-  };
+  }
 
-  static commercetoolsDiscountCodesInfoToDiscountCodes: (
+  static commercetoolsDiscountCodesInfoToDiscountCodes(
     commercetoolsDiscountCodesInfo: CommercetoolsDiscountCodeInfo[] | undefined,
     locale: Locale,
-  ) => Discount[] = (commercetoolsDiscountCodesInfo: CommercetoolsDiscountCodeInfo[] | undefined, locale: Locale) => {
+  ): Discount[] {
     const discounts: Discount[] = [];
 
     commercetoolsDiscountCodesInfo?.forEach((commercetoolsDiscountCodeInfo) => {
@@ -269,12 +258,12 @@ export class CartMapper {
     });
 
     return discounts;
-  };
+  }
 
-  static commercetoolsDiscountCodeInfoToDiscountCode: (
+  static commercetoolsDiscountCodeInfoToDiscountCode(
     commercetoolsDiscountCodeInfo: CommercetoolsDiscountCodeInfo,
     locale: Locale,
-  ) => Discount = (commercetoolsDiscountCodeInfo: CommercetoolsDiscountCodeInfo, locale: Locale) => {
+  ): Discount {
     let discount: Discount = {
       state: commercetoolsDiscountCodeInfo.state,
     };
@@ -292,15 +281,12 @@ export class CartMapper {
     }
 
     return discount;
-  };
+  }
 
-  static commercetoolsDiscountedPricesPerQuantityToDiscountTexts: (
+  static commercetoolsDiscountedPricesPerQuantityToDiscountTexts(
     commercetoolsDiscountedLineItemPricesForQuantity: CommercetoolsDiscountedLineItemPriceForQuantity[] | undefined,
     locale: Locale,
-  ) => string[] = (
-    commercetoolsDiscountedLineItemPricesForQuantity: CommercetoolsDiscountedLineItemPriceForQuantity[] | undefined,
-    locale: Locale,
-  ) => {
+  ): string[] {
     const discountTexts: string[] = [];
 
     commercetoolsDiscountedLineItemPricesForQuantity?.forEach((commercetoolsDiscountedLineItemPriceForQuantity) => {
@@ -312,15 +298,12 @@ export class CartMapper {
     });
 
     return discountTexts;
-  };
+  }
 
-  static commercetoolsDiscountedPricesPerQuantityToDiscounts: (
+  static commercetoolsDiscountedPricesPerQuantityToDiscounts(
     commercetoolsDiscountedLineItemPricesForQuantity: CommercetoolsDiscountedLineItemPriceForQuantity[] | undefined,
     locale: Locale,
-  ) => Discount[] = (
-    commercetoolsDiscountedLineItemPricesForQuantity: CommercetoolsDiscountedLineItemPriceForQuantity[] | undefined,
-    locale: Locale,
-  ) => {
+  ): Discount[] {
     const discounts: Discount[] = [];
 
     commercetoolsDiscountedLineItemPricesForQuantity?.forEach((commercetoolsDiscountedLineItemPriceForQuantity) => {
@@ -334,12 +317,12 @@ export class CartMapper {
     });
 
     return discounts;
-  };
+  }
 
-  static commercetoolsDiscountedLineItemPortionToDiscount: (
+  static commercetoolsDiscountedLineItemPortionToDiscount(
     commercetoolsDiscountedLineItemPortion: CommercetoolsDiscountedLineItemPortion,
     locale: Locale,
-  ) => Discount = (commercetoolsDiscountedLineItemPortion: CommercetoolsDiscountedLineItemPortion, locale: Locale) => {
+  ): Discount {
     let discount: Discount = {
       discountedAmount: ProductMapper.commercetoolsMoneyToMoney(
         commercetoolsDiscountedLineItemPortion.discountedAmount,
@@ -358,12 +341,12 @@ export class CartMapper {
     }
 
     return discount;
-  };
+  }
 
-  static commercetoolsTaxedPriceToTaxed: (
+  static commercetoolsTaxedPriceToTaxed(
     commercetoolsTaxedPrice: CommercetoolsTaxedPrice | undefined,
     locale: Locale,
-  ) => Tax | undefined = (commercetoolsTaxedPrice: CommercetoolsTaxedPrice | undefined, locale: Locale) => {
+  ): Tax | undefined {
     if (commercetoolsTaxedPrice === undefined) {
       return undefined;
     }
@@ -380,5 +363,5 @@ export class CartMapper {
         return taxPortion;
       }),
     };
-  };
+  }
 }

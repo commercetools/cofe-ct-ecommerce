@@ -15,7 +15,7 @@ export class SearchRouter {
     return false;
   }
 
-  static loadFor = async (request: Request, frontasticContext: Context): Promise<Result> | null => {
+  static async loadFor(request: Request, frontasticContext: Context): Promise<Result | null> {
     const productApi = new ProductApi(frontasticContext, getLocale(request));
 
     const urlMatches = getPath(request)?.match(/\/search/);
@@ -29,5 +29,5 @@ export class SearchRouter {
     }
 
     return null;
-  };
+  }
 }

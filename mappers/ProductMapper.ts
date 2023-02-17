@@ -53,10 +53,10 @@ const TypeMap = new Map<string, string>([
 ]);
 
 export class ProductMapper {
-  static commercetoolsProductProjectionToProduct: (
+  static commercetoolsProductProjectionToProduct(
     commercetoolsProduct: CommercetoolsProductProjection,
     locale: Locale,
-  ) => Product = (commercetoolsProduct: CommercetoolsProductProjection, locale: Locale) => {
+  ): Product {
     const product: Product = {
       productId: commercetoolsProduct.id,
       version: commercetoolsProduct?.version?.toString(),
@@ -70,12 +70,12 @@ export class ProductMapper {
     product._url = ProductRouter.generateUrlFor(product);
 
     return product;
-  };
+  }
 
-  static commercetoolsProductProjectionToVariants: (
+  static commercetoolsProductProjectionToVariants(
     commercetoolsProduct: CommercetoolsProductProjection,
     locale: Locale,
-  ) => Variant[] = (commercetoolsProduct: CommercetoolsProductProjection, locale: Locale) => {
+  ): Variant[] {
     const variants: Variant[] = [];
 
     if (commercetoolsProduct?.masterVariant) {
@@ -87,12 +87,12 @@ export class ProductMapper {
     }
 
     return variants;
-  };
+  }
 
-  static commercetoolsProductVariantToVariant: (
+  static commercetoolsProductVariantToVariant(
     commercetoolsVariant: CommercetoolsProductVariant,
     locale: Locale,
-  ) => Variant = (commercetoolsVariant: CommercetoolsProductVariant, locale: Locale) => {
+  ): Variant {
     const attributes = this.commercetoolsAttributesToAttributes(commercetoolsVariant.attributes, locale);
     const { price, discountedPrice, discounts } = this.extractPriceAndDiscounts(commercetoolsVariant, locale);
 
@@ -110,28 +110,25 @@ export class ProductMapper {
       discounts: discounts,
       isOnStock: commercetoolsVariant.availability?.isOnStock || undefined,
     } as Variant;
-  };
+  }
 
-  static commercetoolsAttributesToAttributes: (
+  static commercetoolsAttributesToAttributes(
     commercetoolsAttributes: CommercetoolsAttribute[],
     locale: Locale,
-  ) => Attributes = (commercetoolsAttributes: CommercetoolsAttribute[], locale: Locale) => {
+  ): Attributes {
     const attributes: Attributes = {};
 
     commercetoolsAttributes?.forEach((commercetoolsAttribute) => {
-      attributes[commercetoolsAttribute.name] = this.extractAttributeValue(
-        commercetoolsAttribute.value,
-        locale,
-      );
+      attributes[commercetoolsAttribute.name] = this.extractAttributeValue(commercetoolsAttribute.value, locale);
     });
 
     return attributes;
-  };
+  }
 
-  static commercetoolsCategoryReferencesToCategories: (
+  static commercetoolsCategoryReferencesToCategories(
     commercetoolsCategoryReferences: CategoryReference[],
     locale: Locale,
-  ) => Category[] = (commercetoolsCategoryReferences: CategoryReference[], locale: Locale) => {
+  ): Category[] {
     const categories: Category[] = [];
 
     commercetoolsCategoryReferences.forEach((commercetoolsCategory) => {
@@ -149,10 +146,7 @@ export class ProductMapper {
     return categories;
   };
 
-  static commercetoolsCategoryToCategory: (commercetoolsCategory: CommercetoolsCategory, locale: Locale) => Category = (
-    commercetoolsCategory: CommercetoolsCategory,
-    locale: Locale,
-  ) => {
+  static commercetoolsCategoryToCategory(commercetoolsCategory: CommercetoolsCategory, locale: Locale): Category {
     return {
       categoryId: commercetoolsCategory.id,
       name: commercetoolsCategory.name?.[locale.language] ?? undefined,
@@ -581,7 +575,6 @@ export class ProductMapper {
   static commercetoolsAttributeGroupToString(body: AttributeGroup): string[] {
     return body.attributes.map((attribute) => attribute.key);
   }
-
 
   static calculatePreviousCursor(offset: number, count: number) {
     return offset - count >= 0 ? `offset:${offset - count}` : undefined;

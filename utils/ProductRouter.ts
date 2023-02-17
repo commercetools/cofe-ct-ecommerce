@@ -28,7 +28,7 @@ export class ProductRouter {
     return false;
   }
 
-  static loadFor = async (request: Request, frontasticContext: Context): Promise<Product> => {
+  static async loadFor(request: Request, frontasticContext: Context): Promise<Product> {
     const productApi = new ProductApi(frontasticContext, getLocale(request));
 
     const urlMatches = getPath(request)?.match(/\/p\/([^\/]+)/);
@@ -41,5 +41,5 @@ export class ProductRouter {
     }
 
     return null;
-  };
+  }
 }

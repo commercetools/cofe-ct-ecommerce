@@ -9,10 +9,7 @@ import { TermFacet } from '@commercetools/frontend-domain-types/query/TermFacet'
 import { RangeFacet } from '@commercetools/frontend-domain-types/query/RangeFacet';
 
 export class ProductQueryFactory {
-  static queryFromParams: (request: Request, config?: DataSourceConfiguration) => ProductQuery = (
-    request: Request,
-    config?: DataSourceConfiguration,
-  ) => {
+  static queryFromParams(request: Request, config?: DataSourceConfiguration): ProductQuery {
     let queryParams;
     const filters: Filter[] = [];
     const productQuery: ProductQuery = {
@@ -159,7 +156,7 @@ export class ProductQueryFactory {
     productQuery.cursor = queryParams?.cursor || undefined;
 
     return productQuery;
-  };
+  }
 
   private static queryParamsToFacets(queryParams: any) {
     const facets: Facet[] = [];
