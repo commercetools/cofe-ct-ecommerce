@@ -79,8 +79,8 @@ export class ProductQueryFactory {
      * the following method to merge both, filters and values, in a single array.
      */
     const configFiltersData = [];
-    configFiltersData.push(...ProductQueryFactory.mergeProductFiltersAndValues(queryParams));
-    configFiltersData.push(...ProductQueryFactory.mergeCategoryFiltersAndValues(queryParams));
+    configFiltersData.push(...this.mergeProductFiltersAndValues(queryParams));
+    configFiltersData.push(...this.mergeCategoryFiltersAndValues(queryParams));
 
     let key: any;
     let configFilterData: any;
@@ -131,7 +131,7 @@ export class ProductQueryFactory {
      * Map facets
      */
     if (queryParams.facets) {
-      productQuery.facets = ProductQueryFactory.queryParamsToFacets(queryParams);
+      productQuery.facets = this.queryParamsToFacets(queryParams);
     }
 
     /**

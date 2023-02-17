@@ -12,7 +12,7 @@ export class ProductRouter {
   }
 
   static generateUrlFor(item: Product | LineItem | WishlistItem) {
-    if (ProductRouter.isProduct(item)) {
+    if (this.isProduct(item)) {
       const slug = (item.name ?? '').toLowerCase().replace(/\s/g, '-');
 
       return `/${slug}/p/${item.variants[0].sku}`;

@@ -15,7 +15,7 @@ export class WishlistMapper {
       accountId: commercetoolsShoppingList.customer?.id ?? undefined,
       name: commercetoolsShoppingList.name[locale.language],
       lineItems: (commercetoolsShoppingList.lineItems || []).map((lineItem) =>
-        WishlistMapper.commercetoolsLineItemToLineItem(lineItem, locale),
+        this.commercetoolsLineItemToLineItem(lineItem, locale),
       ),
     };
   };

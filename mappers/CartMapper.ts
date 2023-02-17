@@ -37,15 +37,15 @@ export class CartMapper {
     return {
       cartId: commercetoolsCart.id,
       cartVersion: commercetoolsCart.version.toString(),
-      lineItems: CartMapper.commercetoolsLineItemsToLineItems(commercetoolsCart.lineItems, locale),
+      lineItems: this.commercetoolsLineItemsToLineItems(commercetoolsCart.lineItems, locale),
       email: commercetoolsCart?.customerEmail,
       sum: ProductMapper.commercetoolsMoneyToMoney(commercetoolsCart.totalPrice),
-      shippingAddress: CartMapper.commercetoolsAddressToAddress(commercetoolsCart.shippingAddress),
-      billingAddress: CartMapper.commercetoolsAddressToAddress(commercetoolsCart.billingAddress),
-      shippingInfo: CartMapper.commercetoolsShippingInfoToShippingInfo(commercetoolsCart.shippingInfo, locale),
-      payments: CartMapper.commercetoolsPaymentInfoToPayments(commercetoolsCart.paymentInfo, locale),
-      discountCodes: CartMapper.commercetoolsDiscountCodesInfoToDiscountCodes(commercetoolsCart.discountCodes, locale),
-      taxed: CartMapper.commercetoolsTaxedPriceToTaxed(commercetoolsCart.taxedPrice, locale),
+      shippingAddress: this.commercetoolsAddressToAddress(commercetoolsCart.shippingAddress),
+      billingAddress: this.commercetoolsAddressToAddress(commercetoolsCart.billingAddress),
+      shippingInfo: this.commercetoolsShippingInfoToShippingInfo(commercetoolsCart.shippingInfo, locale),
+      payments: this.commercetoolsPaymentInfoToPayments(commercetoolsCart.paymentInfo, locale),
+      discountCodes: this.commercetoolsDiscountCodesInfoToDiscountCodes(commercetoolsCart.discountCodes, locale),
+      taxed: this.commercetoolsTaxedPriceToTaxed(commercetoolsCart.taxedPrice, locale),
     };
   };
 
@@ -63,11 +63,11 @@ export class CartMapper {
         count: commercetoolsLineItem.quantity,
         price: ProductMapper.commercetoolsMoneyToMoney(commercetoolsLineItem.price?.value),
         discountedPrice: ProductMapper.commercetoolsMoneyToMoney(commercetoolsLineItem.price?.discounted?.value),
-        discountTexts: CartMapper.commercetoolsDiscountedPricesPerQuantityToDiscountTexts(
+        discountTexts: this.commercetoolsDiscountedPricesPerQuantityToDiscountTexts(
           commercetoolsLineItem.discountedPricePerQuantity,
           locale,
         ),
-        discounts: CartMapper.commercetoolsDiscountedPricesPerQuantityToDiscounts(
+        discounts: this.commercetoolsDiscountedPricesPerQuantityToDiscounts(
           commercetoolsLineItem.discountedPricePerQuantity,
           locale,
         ),
@@ -133,10 +133,10 @@ export class CartMapper {
       orderId: commercetoolsOrder.orderNumber,
       orderVersion: commercetoolsOrder.version.toString(),
       // createdAt:
-      lineItems: CartMapper.commercetoolsLineItemsToLineItems(commercetoolsOrder.lineItems, locale),
+      lineItems: this.commercetoolsLineItemsToLineItems(commercetoolsOrder.lineItems, locale),
       email: commercetoolsOrder?.customerEmail,
-      shippingAddress: CartMapper.commercetoolsAddressToAddress(commercetoolsOrder.shippingAddress),
-      billingAddress: CartMapper.commercetoolsAddressToAddress(commercetoolsOrder.billingAddress),
+      shippingAddress: this.commercetoolsAddressToAddress(commercetoolsOrder.shippingAddress),
+      billingAddress: this.commercetoolsAddressToAddress(commercetoolsOrder.billingAddress),
       sum: ProductMapper.commercetoolsMoneyToMoney(commercetoolsOrder.totalPrice),
       //sum: commercetoolsOrder.totalPrice.centAmount,
       // payments:
@@ -159,7 +159,7 @@ export class CartMapper {
 
     if (commercetoolsShippingInfo.shippingMethod.obj) {
       shippingMethod = {
-        ...CartMapper.commercetoolsShippingMethodToShippingMethod(commercetoolsShippingInfo.shippingMethod.obj, locale),
+        ...this.commercetoolsShippingMethodToShippingMethod(commercetoolsShippingInfo.shippingMethod.obj, locale),
       };
     }
 
@@ -181,7 +181,7 @@ export class CartMapper {
         commercetoolsShippingMethod?.localizedDescription?.[locale.language] ||
         commercetoolsShippingMethod?.description ||
         undefined,
-      rates: CartMapper.commercetoolsZoneRatesToRates(commercetoolsShippingMethod?.zoneRates, locale),
+      rates: this.commercetoolsZoneRatesToRates(commercetoolsShippingMethod?.zoneRates, locale),
     } as ShippingMethod;
   };
 
@@ -235,7 +235,7 @@ export class CartMapper {
 
     commercetoolsPaymentInfo?.payments?.forEach((commercetoolsPayment) => {
       if (commercetoolsPayment.obj) {
-        payments.push(CartMapper.commercetoolsPaymentToPayment(commercetoolsPayment.obj, locale));
+        payments.push(this.commercetoolsPaymentToPayment(commercetoolsPayment.obj, locale));
       }
     });
 
@@ -265,7 +265,7 @@ export class CartMapper {
     const discounts: Discount[] = [];
 
     commercetoolsDiscountCodesInfo?.forEach((commercetoolsDiscountCodeInfo) => {
-      discounts.push(CartMapper.commercetoolsDiscountCodeInfoToDiscountCode(commercetoolsDiscountCodeInfo, locale));
+      discounts.push(this.commercetoolsDiscountCodeInfoToDiscountCode(commercetoolsDiscountCodeInfo, locale));
     });
 
     return discounts;
@@ -327,7 +327,7 @@ export class CartMapper {
       commercetoolsDiscountedLineItemPriceForQuantity.discountedPrice.includedDiscounts.forEach(
         (commercetoolsDiscountedLineItemPortion) => {
           discounts.push(
-            CartMapper.commercetoolsDiscountedLineItemPortionToDiscount(commercetoolsDiscountedLineItemPortion, locale),
+            this.commercetoolsDiscountedLineItemPortionToDiscount(commercetoolsDiscountedLineItemPortion, locale),
           );
         },
       );
