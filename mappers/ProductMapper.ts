@@ -157,7 +157,7 @@ export class ProductMapper {
       name: commercetoolsCategory.name?.[locale.language] ?? undefined,
       slug: commercetoolsCategory.slug?.[locale.language] ?? undefined,
       depth: commercetoolsCategory.ancestors.length,
-      subCategories: (commercetoolsCategory as any).subCategories.map((subCategory: CommercetoolsCategory) =>
+      subCategories: (commercetoolsCategory as any).subCategories?.map((subCategory: CommercetoolsCategory) =>
         ProductMapper.commercetoolsCategoryToCategory(subCategory, locale),
       ),
       path:
