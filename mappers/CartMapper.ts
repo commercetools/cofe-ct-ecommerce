@@ -16,7 +16,7 @@ import {
 } from '@commercetools/platform-sdk';
 import { LineItem } from '@commercetools/frontend-domain-types/cart/LineItem';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
-import { Order } from '@commercetools/frontend-domain-types/cart/Order';
+import { Order } from '@b2bdemo/types/types/cart/Order';
 import { Locale } from '../interfaces/Locale';
 import { ShippingMethod } from '@commercetools/frontend-domain-types/cart/ShippingMethod';
 import { ShippingRate } from '@commercetools/frontend-domain-types/cart/ShippingRate';
