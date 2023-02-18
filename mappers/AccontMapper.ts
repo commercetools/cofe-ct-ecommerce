@@ -6,10 +6,7 @@ import { BaseAddress } from '@commercetools/platform-sdk/dist/declarations/src/g
 import { AccountToken } from '@commercetools/frontend-domain-types/account/AccountToken';
 
 export class AccountMapper {
-  static commercetoolsCustomerToAccount: (commercetoolsCustomer: commercetoolsCustomer, locale: Locale) => Account = (
-    commercetoolsCustomer: commercetoolsCustomer,
-    locale: Locale,
-  ) => {
+  static commercetoolsCustomerToAccount(commercetoolsCustomer: commercetoolsCustomer, locale: Locale): Account {
     return {
       accountId: commercetoolsCustomer.id,
       email: commercetoolsCustomer.email,
@@ -23,10 +20,10 @@ export class AccountMapper {
     } as Account;
   };
 
-  static commercetoolsCustomerTokenToToken: (
+  static commercetoolsCustomerTokenToToken(
     commercetoolsCustomerToken: CustomerToken,
     account: Account,
-  ) => AccountToken = (commercetoolsCustomerToken: CustomerToken, account: Account) => {
+  ): AccountToken {
     return {
       tokenValidUntil: new Date(commercetoolsCustomerToken.expiresAt),
       token: commercetoolsCustomerToken.value,
@@ -34,8 +31,7 @@ export class AccountMapper {
     };
   };
 
-  static commercetoolsCustomerToAddresses: (commercetoolsCustomer: commercetoolsCustomer, locale: Locale) => Address[] =
-    (commercetoolsCustomer: commercetoolsCustomer) => {
+  static commercetoolsCustomerToAddresses(commercetoolsCustomer: commercetoolsCustomer, locale: Locale): Address[] {
       const addresses: Address[] = [];
 
       commercetoolsCustomer.addresses.forEach((commercetoolsAddress) => {
@@ -63,7 +59,7 @@ export class AccountMapper {
       return addresses;
     };
 
-  static addressToCommercetoolsAddress: (address: Address) => BaseAddress = (address: Address) => {
+  static addressToCommercetoolsAddress(address: Address):BaseAddress {
     return {
       id: address.addressId,
       // key: Guid.newGuid(),

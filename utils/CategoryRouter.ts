@@ -13,7 +13,7 @@ export class CategoryRouter {
     return false;
   }
 
-  static loadFor = async (request: Request, frontasticContext: Context): Promise<Result> => {
+  static async loadFor(request: Request, frontasticContext: Context): Promise<Result> {
     const productApi = new ProductApi(frontasticContext, getLocale(request));
 
     const chunks = getPath(request)?.split('/').filter(Boolean);
@@ -31,5 +31,5 @@ export class CategoryRouter {
     }
 
     return null;
-  };
+  }
 }

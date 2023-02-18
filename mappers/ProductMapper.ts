@@ -125,10 +125,10 @@ export class ProductMapper {
     return attributes;
   }
 
-  static commercetoolsCategoryReferencesToCategories: (
+  static commercetoolsCategoryReferencesToCategories(
     commercetoolsCategoryReferences: CategoryReference[],
     locale: Locale,
-  ) => Category[] = (commercetoolsCategoryReferences: CategoryReference[], locale: Locale) => {
+  ): Category[] {
     const categories: Category[] = [];
 
     commercetoolsCategoryReferences.forEach((commercetoolsCategory) => {
@@ -146,10 +146,7 @@ export class ProductMapper {
     return categories;
   };
 
-  static commercetoolsCategoryToCategory: (commercetoolsCategory: CommercetoolsCategory, locale: Locale) => Category = (
-    commercetoolsCategory: CommercetoolsCategory,
-    locale: Locale,
-  ) => {
+  static commercetoolsCategoryToCategory(commercetoolsCategory: CommercetoolsCategory, locale: Locale): Category {
     return {
       categoryId: commercetoolsCategory.id,
       name: commercetoolsCategory.name?.[locale.language] ?? undefined,

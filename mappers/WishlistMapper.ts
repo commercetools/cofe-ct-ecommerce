@@ -7,7 +7,7 @@ import { ProductRouter } from '../utils/ProductRouter';
 import { ProductMapper } from './ProductMapper';
 
 export class WishlistMapper {
-  static commercetoolsShoppingListToWishlist = (commercetoolsShoppingList: ShoppingList, locale: Locale): Wishlist => {
+  static commercetoolsShoppingListToWishlist(commercetoolsShoppingList: ShoppingList, locale: Locale): Wishlist {
     return {
       wishlistId: commercetoolsShoppingList.id,
       wishlistVersion: commercetoolsShoppingList.version.toString(),
@@ -18,12 +18,12 @@ export class WishlistMapper {
         this.commercetoolsLineItemToLineItem(lineItem, locale),
       ),
     };
-  };
+  }
 
-  private static commercetoolsLineItemToLineItem = (
+  private static commercetoolsLineItemToLineItem(
     commercetoolsLineItem: ShoppingListLineItem,
     locale: Locale,
-  ): LineItem => {
+  ): LineItem {
     const lineItem: LineItem = {
       lineItemId: commercetoolsLineItem.id,
       name: commercetoolsLineItem.name[locale.language],
@@ -35,16 +35,16 @@ export class WishlistMapper {
 
     lineItem._url = ProductRouter.generateUrlFor(lineItem);
     return lineItem;
-  };
+  }
 
-  static wishlistToCommercetoolsShoppingListDraft = (
+  static wishlistToCommercetoolsShoppingListDraft(
     wishlist: Omit<Wishlist, 'wishlistId'>,
     locale: Locale,
-  ): ShoppingListDraft => {
+  ): ShoppingListDraft {
     return {
       anonymousId: wishlist.anonymousId,
       customer: wishlist.accountId === undefined ? undefined : { typeId: 'customer', id: wishlist.accountId },
       name: { [locale.language]: wishlist.name || '' },
     };
-  };
+  }
 }
