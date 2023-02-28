@@ -111,7 +111,7 @@ export const register: ActionHook = async (request: Request, actionContext: Acti
   const account = await accountApi.create(accountData, cart);
 
   if (EmailApi) {
-    const emailApi = new EmailApi(actionContext.frontasticContext, locale);
+    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
 
     emailApi.sendWelcomeCustomerEmail(account);
 
@@ -160,7 +160,7 @@ export const requestConfirmationEmail: ActionHook = async (request: Request, act
   }
 
   if (EmailApi) {
-    const emailApi = new EmailApi(actionContext.frontasticContext, locale);
+    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
     emailApi.sendAccountVerificationEmail(account);
   }
   const response: Response = {
@@ -264,7 +264,7 @@ export const requestReset: ActionHook = async (request: Request, actionContext: 
   const passwordResetToken = await accountApi.generatePasswordResetToken(accountRequestResetBody.email);
 
   if (EmailApi) {
-    const emailApi = new EmailApi(actionContext.frontasticContext, locale);
+    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
     emailApi.sendPasswordResetEmail(accountRequestResetBody as Account, passwordResetToken.token);
   }
 
@@ -351,10 +351,10 @@ export const updateSubscription: ActionHook = async (request: Request, actionCon
 
   account = await accountApi.updateSubscription(account, isSubscribed);
 
-  // if (EmailApi) {
-  //   const emailApi = new EmailApi(actionContext.frontasticContext, getLocale(request));
-  //   await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
-  // }
+  if (EmailApi) {
+    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
+    await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
+  }
 
   return {
     statusCode: 200,
