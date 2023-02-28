@@ -228,7 +228,7 @@ export class ProductApi extends BaseApi {
           }
 
           for (let i = 0; i < categories.length; i++) {
-            if (categories[i].parent) {
+            if (categories[i].parent && nodes[categories[i].parent.id]?.subCategories) {
               nodes[categories[i].parent.id].subCategories.push(categories[i]);
             }
           }
@@ -237,7 +237,9 @@ export class ProductApi extends BaseApi {
           while (nodesQueue.length > 0) {
             const currentCategories = nodesQueue.pop();
             currentCategories.sort((a, b) => +b.orderHint - +a.orderHint);
-            currentCategories.forEach((category) => nodesQueue.push(nodes[category.id].subCategories));
+            currentCategories.forEach(
+              (category) => !!nodes[category.id]?.subCategories && nodesQueue.push(nodes[category.id].subCategories),
+            );
           }
 
           const items = categories.map((category) => ProductMapper.commercetoolsCategoryToCategory(category, locale));
