@@ -1,15 +1,15 @@
 import { Result } from '@commercetools/frontend-domain-types/product/Result';
-import { ProductMapper } from '../mappers/ProductMapper';
 import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
 import { Product } from '@commercetools/frontend-domain-types/product/Product';
-import { BaseApi } from './BaseApi';
 import { FilterField, FilterFieldTypes } from '@commercetools/frontend-domain-types/product/FilterField';
 import { FilterTypes } from '@commercetools/frontend-domain-types/query/Filter';
 import { TermFilter } from '@commercetools/frontend-domain-types/query/TermFilter';
 import { RangeFilter } from '@commercetools/frontend-domain-types/query/RangeFilter';
-import { CategoryQuery } from '../interfaces/CategoryQuery';
 import { Category } from '@commercetools/frontend-domain-types/product/Category';
 import { FacetDefinition } from '@commercetools/frontend-domain-types/product/FacetDefinition';
+import { ProductMapper } from '../mappers/ProductMapper';
+import { CategoryQuery } from '../interfaces/CategoryQuery';
+import { BaseApi } from './BaseApi';
 
 export class ProductApi extends BaseApi {
   protected getOffsetFromCursor = (cursor: string) => {
