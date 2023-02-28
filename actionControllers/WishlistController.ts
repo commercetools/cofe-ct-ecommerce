@@ -22,7 +22,7 @@ function fetchAccountFromSessionEnsureLoggedIn(request: Request): Account {
   return account;
 }
 
-async function fetchWishlist(request: Request, wishlistApi: typeof WishlistApi) {
+async function fetchWishlist(request: Request, wishlistApi: WishlistApi) {
   if (request.sessionData?.wishlistId !== undefined) {
     return await wishlistApi.getById(request.sessionData?.wishlistId);
   }
