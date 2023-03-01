@@ -18,7 +18,7 @@ export class AccountMapper {
       addresses: this.commercetoolsCustomerToAddresses(commercetoolsCustomer, locale),
       isSubscribed: commercetoolsCustomer?.custom?.fields?.isSubscribed,
     } as Account;
-  };
+  }
 
   static commercetoolsCustomerTokenToToken(
     commercetoolsCustomerToken: CustomerToken,
@@ -29,7 +29,7 @@ export class AccountMapper {
       token: commercetoolsCustomerToken.value,
       email: account.email,
     };
-  };
+  }
 
   static commercetoolsCustomerToAddresses(commercetoolsCustomer: commercetoolsCustomer, locale: Locale): Address[] {
       const addresses: Address[] = [];
@@ -57,7 +57,7 @@ export class AccountMapper {
       });
 
       return addresses;
-    };
+    }
 
   static addressToCommercetoolsAddress(address: Address):BaseAddress {
     return {
@@ -76,5 +76,5 @@ export class AccountMapper {
       state: address.state,
       phone: address.phone,
     } as BaseAddress;
-  };
+  }
 }

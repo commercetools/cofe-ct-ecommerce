@@ -20,7 +20,7 @@ export class WishlistMapper {
     };
   }
 
-  private static commercetoolsLineItemToLineItem(
+  static commercetoolsLineItemToLineItem(
     commercetoolsLineItem: ShoppingListLineItem,
     locale: Locale,
   ): LineItem {

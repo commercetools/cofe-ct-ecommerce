@@ -1,7 +1,7 @@
 import { Context } from '@frontastic/extension-types';
 import { formatPrice } from '../utils/Price';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
-import { Order } from '@commercetools/platform-sdk';
+import { Order } from '@commercetools/frontend-domain-types/cart/Order';
 import SendgridClient from '@sendgrid/mail';
 import { BaseEmailApi } from '../../EmailApiFactory';
 

@@ -18,14 +18,14 @@ export function mapRequestToAccount(accountRegisterBody: AccountRegisterBody): A
     accountRegisterBody.billingAddress.isDefaultBillingAddress = true;
     accountRegisterBody.billingAddress.isDefaultShippingAddress = !(accountRegisterBody.shippingAddress !== undefined);
 
-    account.addresses!.push(accountRegisterBody.billingAddress);
+    account.addresses && account.addresses.push(accountRegisterBody.billingAddress);
   }
 
   if (accountRegisterBody.shippingAddress) {
     accountRegisterBody.shippingAddress.isDefaultShippingAddress = true;
     accountRegisterBody.shippingAddress.isDefaultBillingAddress = !(accountRegisterBody.billingAddress !== undefined);
 
-    account.addresses!.push(accountRegisterBody.shippingAddress);
+    account.addresses && account.addresses.push(accountRegisterBody.shippingAddress);
   }
 
   return account;

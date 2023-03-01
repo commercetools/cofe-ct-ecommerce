@@ -1,5 +1,5 @@
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
-import { Order } from '@commercetools/platform-sdk';
+import { Order } from '@commercetools/frontend-domain-types/cart/Order';
 import { Context } from '@frontastic/extension-types';
 
 export interface BaseEmailApi {

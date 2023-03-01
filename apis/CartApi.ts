@@ -385,7 +385,7 @@ export class CartApi extends BaseApi {
     const methodArgs = {
       queryArgs: {
         expand: ['zoneRates[*].zone'],
-        country: undefined as string | any,
+        country: undefined as unknown | any,
       },
     };
 

@@ -352,7 +352,7 @@ export const updateSubscription: ActionHook = async (request: Request, actionCon
   account = await accountApi.updateSubscription(account, isSubscribed);
 
   if (EmailApi) {
-    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
+    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, getLocale(request));
     await (isSubscribed ? emailApi.subscribe(account, ['newsletter']) : emailApi.unsubscribe(account));
   }
 

@@ -1,4 +1,4 @@
-import { ActionContext, ActionHandler, Context, Request, Response } from '@frontastic/extension-types';
+import { ActionContext, Request, Response } from '@frontastic/extension-types';
 import { getLocale } from '../utils/Request';
 import { ProjectApi } from '../apis/ProjectApi';
 

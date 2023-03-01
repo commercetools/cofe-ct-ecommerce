@@ -17,7 +17,6 @@ import {
 import { Product } from '@commercetools/frontend-domain-types/product/Product';
 import { Variant } from '@commercetools/frontend-domain-types/product/Variant';
 import { Attributes } from '@commercetools/frontend-domain-types/product/Attributes';
-import { Category } from '@commercetools/frontend-domain-types/product/Category';
 import { ProductRouter } from '../utils/ProductRouter';
 import { Locale } from '../interfaces/Locale';
 import { Money } from '@commercetools/frontend-domain-types/product/Money';
@@ -42,6 +41,7 @@ import { RangeFacet as QueryRangeFacet } from '@commercetools/frontend-domain-ty
 import { Facet as QueryFacet } from '@commercetools/frontend-domain-types/query/Facet';
 import { FacetDefinition } from '@commercetools/frontend-domain-types/product/FacetDefinition';
 import { FilterTypes } from '@commercetools/frontend-domain-types/query/Filter';
+import { Category } from '../interfaces/Category';
 
 const TypeMap = new Map<string, string>([
   ['boolean', FilterFieldTypes.BOOLEAN],
@@ -144,7 +144,7 @@ export class ProductMapper {
     });
 
     return categories;
-  };
+  }
 
   static commercetoolsCategoryToCategory(commercetoolsCategory: CommercetoolsCategory, locale: Locale): Category {
     return {
@@ -164,7 +164,7 @@ export class ProductMapper {
               .join('/')}/${commercetoolsCategory.id}`
           : `/${commercetoolsCategory.id}`,
     };
-  };
+  }
 
   static extractAttributeValue(commercetoolsAttributeValue: unknown, locale: Locale): unknown {
     if (commercetoolsAttributeValue['key'] !== undefined && commercetoolsAttributeValue['label'] !== undefined) {

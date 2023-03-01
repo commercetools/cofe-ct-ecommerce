@@ -4,7 +4,7 @@ import { Context, Project } from '@frontastic/extension-types';
 import { SmtpConfig } from '../interfaces/SmtpConfig';
 import { SmtpConfigurationError } from '../errors/SmtpConfigurationError';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
-import { Order } from '@commercetools/platform-sdk';
+import { Order } from '@commercetools/frontend-domain-types/cart/Order';
 import { BaseEmailApi } from '../../EmailApiFactory';
 
 export class EmailApi implements BaseEmailApi {
