@@ -7,7 +7,7 @@ import { getPath, getLocale } from './Request';
 import { LineItem as WishlistItem } from '@commercetools/frontend-domain-types/wishlist/LineItem';
 
 export class ProductRouter {
-  private static isProduct(product: Product | LineItem | WishlistItem): product is Product {
+  static isProduct(product: Product | LineItem | WishlistItem): product is Product {
     return (product as Product).productId !== undefined;
   }
 

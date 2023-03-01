@@ -1,9 +1,10 @@
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
 import { Order } from '@commercetools/frontend-domain-types/cart/Order';
 import { Context } from '@frontastic/extension-types';
+import { SentMessageInfo } from 'nodemailer';
 
 export interface BaseEmailApi {
-  sendEmail?: (data: { to: string; subject?: string; text?: string; html?: string }) => Promise<void>;
+  sendEmail?: (data: { to: string; subject?: string; text?: string; html?: string }) => Promise<void | SentMessageInfo>;
   sendAccountVerificationEmail: (customer: Account) => Promise<void>;
   sendPasswordResetEmail: (customer: Account, token: string) => Promise<void>;
   sendOrderConfirmationEmail: (order: Order) => Promise<void>;
@@ -16,7 +17,7 @@ export interface BaseEmailApi {
 export class EmailApiFactory {
   SmtpApi: new (context: Context, locale: string) => BaseEmailApi;
   SendgridApi: new (context: Context, locale: string) => BaseEmailApi;
-  constructor(SmtpApi, SendgridApi) {
+  constructor(SmtpApi: any, SendgridApi: any) {
     this.SmtpApi = SmtpApi;
     this.SendgridApi = SendgridApi;
   }
