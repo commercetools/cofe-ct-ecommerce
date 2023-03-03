@@ -158,7 +158,7 @@ export class ProductQueryFactory {
     return productQuery;
   }
 
-  private static queryParamsToFacets(queryParams: any) {
+  protected static queryParamsToFacets(queryParams: any) {
     const facets: Facet[] = [];
     let key: any;
     let facetData: any;
@@ -200,7 +200,7 @@ export class ProductQueryFactory {
     return facets;
   }
 
-  private static mergeProductFiltersAndValues(queryParams: any) {
+  protected static mergeProductFiltersAndValues(queryParams: any) {
     const filtersData: any[] = [];
 
     if (queryParams?.productFilters?.filters === undefined) {
@@ -228,7 +228,7 @@ export class ProductQueryFactory {
     return filtersData;
   }
 
-  private static mergeCategoryFiltersAndValues(queryParams: any) {
+  protected static mergeCategoryFiltersAndValues(queryParams: any) {
     const filtersData: any[] = [];
 
     if (queryParams?.categoryFilters?.filters === undefined) {

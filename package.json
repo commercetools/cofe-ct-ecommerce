@@ -1,6 +1,6 @@
 {
   "name": "cofe-ct-ecommerce",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Basic BE extensions for Commercetools Frontend",
   "main": "index.js",
   "scripts": {
