@@ -1,6 +1,6 @@
 {
   "name": "cofe-ct-ecommerce",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Basic BE extensions for Commercetools Frontend",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "homepage": "https://github.com/commercetools/cofe-ct-ecommerce#readme",
   "dependencies": {
     "@commercetools/frontend-domain-types": "^1.0.3",
-    "@commercetools/platform-sdk": "^4.5.0",
+    "@commercetools/platform-sdk": "^4.6.0-alpha-associate-roles",
     "@frontastic/extension-types": "^0.0.11",
     "@sendgrid/mail": "^7.7.0",
     "@types/node": "^18.13.0",
