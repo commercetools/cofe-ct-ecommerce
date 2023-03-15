@@ -303,18 +303,18 @@
   resolved "https://registry.npmjs.org/@commercetools/frontend-domain-types/-/frontend-domain-types-1.0.3.tgz"
   integrity sha512-ENsvOvUyY6jdjgdUWn33Jvig+hcLxFaZN/6FNrnA9rz4nGClLhzJE9DT/NlOBryqSLxuw00FJC8NGRnnNzZ8Dg==
 
-"@commercetools/platform-sdk@^4.6.0-alpha-associate-roles":
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/@commercetools/platform-sdk/-/platform-sdk-4.6.0.tgz#a2e291a43186fcb74f847eaf2ec1403939aa7a00"
-  integrity sha512-l/GmTLLiKRUPUbafPUP4JxssD396DEX6/maAxKuTKq3Og16wNoRMlcMjcIfNQOUeGImtMD5gGRKtnQreRtk0LA==
+"@commercetools/platform-sdk@4.6.0-alpha-associate-roles":
+  version "4.6.0-alpha-associate-roles"
+  resolved "https://registry.yarnpkg.com/@commercetools/platform-sdk/-/platform-sdk-4.6.0-alpha-associate-roles.tgz#9443def633dc787fc8fd64dc0369b9fb93399843"
+  integrity sha512-IXTmUy1mesKWLsXZce70UPJ3L+ttJT2VaPYrOojSXbQOMx3UHtfZak7Iq72JMy9u9Vo4WtVpccFBXXRREIQkUQ==
   dependencies:
-    "@commercetools/sdk-client-v2" "^2.1.4"
+    "@commercetools/sdk-client-v2" "^2.1.2"
     "@commercetools/sdk-middleware-auth" "^7.0.0"
     "@commercetools/sdk-middleware-http" "^7.0.0"
     "@commercetools/sdk-middleware-logger" "^3.0.0"
     querystring "^0.2.1"
 
-"@commercetools/sdk-client-v2@^2.1.4":
+"@commercetools/sdk-client-v2@^2.1.2":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@commercetools/sdk-client-v2/-/sdk-client-v2-2.1.4.tgz#fcae737b472083c228633dbdd225776795e18bc6"
   integrity sha512-wqRB8jp0+mYtPgx0i9v2M93dSxEtI9c3ik7GCz/HdL6+6THQg/Aybprq32XI1mQCFhzEhsciPP82GG6QlOqu+A==
