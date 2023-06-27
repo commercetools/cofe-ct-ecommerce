@@ -1,5 +1,8 @@
 # Commercetools Frontend Extensions
 
+## NOTE:
+This is **NOT** an official B2C extension code and **NOT** production ready. Use it at your own risk
+
 ## Install
 ```
 yarn add cofe-ct-ecommerce
