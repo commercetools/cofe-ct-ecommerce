@@ -6,10 +6,10 @@ import { Address } from '@commercetools/frontend-domain-types/account/Address';
 import { CartFetcher } from '../utils/CartFetcher';
 import { ShippingMethod } from '@commercetools/frontend-domain-types/cart/ShippingMethod';
 import { Payment, PaymentStatuses } from '@commercetools/frontend-domain-types/cart/Payment';
+import { CartApi } from '../apis/CartApi';
 import { getLocale } from '../utils/Request';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
 import { CartRedeemDiscountCodeError } from '../errors/CartRedeemDiscountCodeError';
-import { CartApi } from '../apis/CartApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
@@ -41,6 +41,7 @@ async function updateCartFromRequest(request: Request, actionContext: ActionCont
 
   return cart;
 }
+
 export const getCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
   const cart = await CartFetcher.fetchCart(request, actionContext);
   const cartId = cart.cartId;
@@ -51,6 +52,19 @@ export const getCart: ActionHook = async (request: Request, actionContext: Actio
     sessionData: {
       ...request.sessionData,
       cartId,
+    },
+  };
+
+  return response;
+};
+
+export const resetCart: ActionHook = async (request: Request, actionContext: ActionContext) => {
+  const response: Response = {
+    statusCode: 200,
+    body: null,
+    sessionData: {
+      ...request.sessionData,
+      cartId: null,
     },
   };
 
@@ -186,6 +200,23 @@ export const checkout: ActionHook = async (request: Request, actionContext: Acti
   return response;
 };
 
+export const getOrder: ActionHook = async (request: Request, actionContext: ActionContext) => {
+  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+
+  const orderId = JSON.parse(request.body).orderId;
+
+  const order = await cartApi.getOrder(orderId);
+
+  const response: Response = {
+    statusCode: 200,
+    body: JSON.stringify(order),
+    sessionData: {
+      ...request.sessionData,
+    },
+  };
+  return response;
+};
+
 export const getOrders: ActionHook = async (request: Request, actionContext: ActionContext) => {
   const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
 
@@ -303,6 +334,31 @@ export const addPaymentByInvoice: ActionHook = async (request: Request, actionCo
 
   return response;
 };
+
+/*
+export const getPayment: ActionHook = async (request: Request, actionContext: ActionContext) => {
+  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+
+  const id = 'fd9b52ff-204b-4986-b13d-b25f53ac3343';
+
+  const amount: any = {
+    centAmount: 1000,
+    currencyCode: 'EUR'
+  };
+
+  let payment = await cartApi.getPayment(id);
+
+  payment = await cartApi.updateOrderPayment(id, payment.body.version, PaymentStatuses.PENDING, 'Payment method', amount);
+
+  const response: Response = {
+    statusCode: 200,
+    body: JSON.stringify(payment),
+    sessionData: request.sessionData,
+  };
+
+  return response;
+}
+*/
 
 export const updatePayment: ActionHook = async (request: Request, actionContext: ActionContext) => {
   const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));

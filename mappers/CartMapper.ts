@@ -124,16 +124,17 @@ export class CartMapper {
       orderState: commercetoolsOrder.orderState,
       orderId: commercetoolsOrder.orderNumber,
       orderVersion: commercetoolsOrder.version.toString(),
-      // createdAt:
+      createdAt: new Date(commercetoolsOrder.createdAt),
       lineItems: this.commercetoolsLineItemsToLineItems(commercetoolsOrder.lineItems, locale),
       email: commercetoolsOrder?.customerEmail,
       shippingAddress: this.commercetoolsAddressToAddress(commercetoolsOrder.shippingAddress),
+      shippingInfo: this.commercetoolsShippingInfoToShippingInfo(commercetoolsOrder.shippingInfo, locale),
       billingAddress: this.commercetoolsAddressToAddress(commercetoolsOrder.billingAddress),
       sum: ProductMapper.commercetoolsMoneyToMoney(commercetoolsOrder.totalPrice),
-      //sum: commercetoolsOrder.totalPrice.centAmount,
-      // payments:
-      // discountCodes:
-      // taxed:
+      subtotal: ProductMapper.commercetoolsMoneyToMoney(commercetoolsOrder.taxedPrice.totalNet),
+      taxed: commercetoolsOrder.taxedPrice.taxPortions[0],
+      payments: this.commercetoolsPaymentInfoToPayments(commercetoolsOrder.paymentInfo, locale),
+      shipmentState: commercetoolsOrder.shipmentState ?? 'Pending',
     } as Order;
   }
 
@@ -292,6 +293,8 @@ export class CartMapper {
     commercetoolsDiscountedLineItemPricesForQuantity?.forEach((commercetoolsDiscountedLineItemPriceForQuantity) => {
       commercetoolsDiscountedLineItemPriceForQuantity.discountedPrice.includedDiscounts.forEach(
         (commercetoolsDiscountedLineItemPortion) => {
+          // TODO: waiting for types update
+          // @ts-ignore
           discountTexts.push(commercetoolsDiscountedLineItemPortion.discount.obj?.name[locale.language]);
         },
       );
@@ -329,7 +332,10 @@ export class CartMapper {
       ),
     };
 
+    // TODO: waiting for types update
+    // @ts-ignore
     if (commercetoolsDiscountedLineItemPortion.discount.obj) {
+      // @ts-ignore
       const commercetoolsCartDiscount = commercetoolsDiscountedLineItemPortion.discount.obj;
 
       discount = {

@@ -55,7 +55,7 @@ export class CartApi extends BaseApi {
         queryArgs: {
           limit: 1,
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -84,7 +84,7 @@ export class CartApi extends BaseApi {
       .post({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -109,7 +109,7 @@ export class CartApi extends BaseApi {
         queryArgs: {
           limit: 1,
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -139,7 +139,7 @@ export class CartApi extends BaseApi {
       .post({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -167,7 +167,7 @@ export class CartApi extends BaseApi {
         queryArgs: {
           limit: 1,
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -338,12 +338,36 @@ export class CartApi extends BaseApi {
       .post({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
         },
         body: orderFromCartDraft,
+      })
+      .execute()
+      .then((response) => {
+        return CartMapper.commercetoolsOrderToOrder(response.body, locale);
+      })
+      .catch((error) => {
+        throw new ExternalError({ status: error.code, message: error.message, body: error.body });
+      });
+  };
+
+  getOrder: (orderId: Order['orderId']) => Promise<Order> = async (orderId: Order['orderId']) => {
+    const locale = await this.getCommercetoolsLocal();
+
+    return await this.getApiForProject()
+      .orders()
+      .withOrderNumber({ orderNumber: orderId })
+      .get({
+        queryArgs: {
+          expand: [
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
+            'discountCodes[*].discountCode',
+            'paymentInfo.payments[*]',
+          ],
+        },
       })
       .execute()
       .then((response) => {
@@ -362,7 +386,7 @@ export class CartApi extends BaseApi {
       .get({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -385,7 +409,7 @@ export class CartApi extends BaseApi {
     const methodArgs = {
       queryArgs: {
         expand: ['zoneRates[*].zone'],
-        country: undefined as unknown | any,
+        country: undefined as string | any,
       },
     };
 
@@ -735,7 +759,7 @@ export class CartApi extends BaseApi {
       .post({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],
@@ -850,7 +874,7 @@ export class CartApi extends BaseApi {
       .post({
         queryArgs: {
           expand: [
-            'lineItems[*].discountedPrice.includedDiscounts[*].discount',
+            'lineItems[*].discountedPricePerQuantity[*].discountedPrice.includedDiscounts[*].discount',
             'discountCodes[*].discountCode',
             'paymentInfo.payments[*]',
           ],

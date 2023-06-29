@@ -3,6 +3,7 @@ import { ProductApi } from '../apis/ProductApi';
 import { getLocale, getPath } from './Request';
 import { Result } from '@commercetools/frontend-domain-types/product/Result';
 import { ProductQueryFactory } from './ProductQueryFactory';
+import { Category } from '@commercetools/frontend-domain-types/product/Category';
 
 export class CategoryRouter {
   static identifyFrom(request: Request) {
@@ -19,9 +20,11 @@ export class CategoryRouter {
     const chunks = getPath(request)?.split('/').filter(Boolean);
 
     if (chunks) {
-      const categoryId = chunks[chunks.length - 1];
+      const slug = chunks[chunks.length - 1];
 
-      request.query.category = categoryId;
+      const response = await productApi.queryCategories({ slug });
+
+      request.query.categories = [(response.items[0] as Category).categoryId];
 
       const productQuery = ProductQueryFactory.queryFromParams({
         ...request,

@@ -13,10 +13,12 @@ import {
   TypedMoney,
   Price as CommercetoolsPrice,
   AttributeGroup,
+  InventoryEntry,
 } from '@commercetools/platform-sdk';
 import { Product } from '@commercetools/frontend-domain-types/product/Product';
 import { Variant } from '@commercetools/frontend-domain-types/product/Variant';
 import { Attributes } from '@commercetools/frontend-domain-types/product/Attributes';
+import { Category } from '@commercetools/frontend-domain-types/product/Category';
 import { ProductRouter } from '../utils/ProductRouter';
 import { Locale } from '../interfaces/Locale';
 import { Money } from '@commercetools/frontend-domain-types/product/Money';
@@ -41,7 +43,7 @@ import { RangeFacet as QueryRangeFacet } from '@commercetools/frontend-domain-ty
 import { Facet as QueryFacet } from '@commercetools/frontend-domain-types/query/Facet';
 import { FacetDefinition } from '@commercetools/frontend-domain-types/product/FacetDefinition';
 import { FilterTypes } from '@commercetools/frontend-domain-types/query/Filter';
-import { Category } from '../interfaces/Category';
+import { Inventory } from '../interfaces/Inventory';
 
 const TypeMap = new Map<string, string>([
   ['boolean', FilterFieldTypes.BOOLEAN],
@@ -109,6 +111,7 @@ export class ProductMapper {
       discountedPrice: discountedPrice,
       discounts: discounts,
       isOnStock: commercetoolsVariant.availability?.isOnStock || undefined,
+      ...(commercetoolsVariant.availability ?? {}),
     } as Variant;
   }
 
@@ -150,8 +153,10 @@ export class ProductMapper {
     return {
       categoryId: commercetoolsCategory.id,
       name: commercetoolsCategory.name?.[locale.language] ?? undefined,
-      slug: commercetoolsCategory.slug?.[locale.language] ?? undefined,
+      slug: commercetoolsCategory.slug?.[locale.language] ?? commercetoolsCategory.id,
       depth: commercetoolsCategory.ancestors.length,
+      // @ts-ignore
+      parentId: commercetoolsCategory.parent?.id,
       subCategories: (commercetoolsCategory as any).subCategories?.map((subCategory: CommercetoolsCategory) =>
         this.commercetoolsCategoryToCategory(subCategory, locale),
       ),
@@ -159,10 +164,10 @@ export class ProductMapper {
         commercetoolsCategory.ancestors.length > 0
           ? `/${commercetoolsCategory.ancestors
               .map((ancestor) => {
-                return ancestor.id;
+                return ancestor.obj?.slug?.[locale.language] ?? ancestor.id;
               })
-              .join('/')}/${commercetoolsCategory.id}`
-          : `/${commercetoolsCategory.id}`,
+              .join('/')}/${commercetoolsCategory.slug?.[locale.language] ?? commercetoolsCategory.id}`
+          : `/${commercetoolsCategory.slug?.[locale.language] ?? commercetoolsCategory.id}`,
     };
   }
 
@@ -352,6 +357,15 @@ export class ProductMapper {
     return facetDefinitions;
   }
 
+  static commercetoolsInventoryToInventory(inventory: InventoryEntry): Inventory {
+    return {
+      availableQuantity: inventory.availableQuantity,
+      quantityOnStock: inventory.quantityOnStock,
+      restockableInDays: inventory.restockableInDays,
+      expectedDelivery: inventory.expectedDelivery,
+    };
+  }
+
   static facetDefinitionsToCommercetoolsQueryArgFacets(facetDefinitions: FacetDefinition[], locale: Locale): string[] {
     const queryArgFacets: string[] = [];
 
@@ -385,7 +399,7 @@ export class ProductMapper {
       }
 
       // Alias to identifier used by us
-      queryArgFacets.push(`${facet} as ${facetDefinition.attributeId}`);
+      queryArgFacets.push(`${facet} as ${facetDefinition.attributeId} counting products`);
     });
 
     return queryArgFacets;
@@ -438,15 +452,24 @@ export class ProductMapper {
         case 'text':
         case 'reference':
         default:
-          if (queryFacet.type === FilterTypes.TERM || queryFacet.type === FilterTypes.BOOLEAN) {
-            filterFacets.push(`${queryFacet.identifier}:"${(queryFacet as QueryTermFacet).terms.join('","')}"`);
-          } else {
-            filterFacets.push(
-              `${queryFacet.identifier}:range (${(queryFacet as QueryRangeFacet).min} to ${
-                (queryFacet as QueryRangeFacet).max
-              })`,
-            );
+          if (queryFacet.type === FilterTypes.TERM) {
+            filterFacets.push(`${queryFacet.identifier}:"${(queryFacet as QueryTermFacet).terms?.join('","')}"`);
+            break;
           }
+
+          if (queryFacet.type === FilterTypes.BOOLEAN) {
+            filterFacets.push(
+              `${queryFacet.identifier}:"${(queryFacet as QueryTermFacet).terms[0] === 'T' ? 'true' : 'false'}"`,
+            );
+            break;
+          }
+
+          filterFacets.push(
+            `${queryFacet.identifier}:range (${(queryFacet as QueryRangeFacet).min} to ${
+              (queryFacet as QueryRangeFacet).max
+            })`,
+          );
+
           break;
       }
     });
@@ -530,7 +553,7 @@ export class ProductMapper {
     facetQuery: QueryTermFacet | undefined,
   ) {
     const termFacet: TermFacet = {
-      type: FacetTypes.TERM,
+      type: facetResult.dataType === 'boolean' ? FacetTypes.BOOLEAN : FacetTypes.TERM,
       identifier: facetKey,
       label: facetKey,
       key: facetKey,
@@ -539,7 +562,7 @@ export class ProductMapper {
         const term: Term = {
           identifier: facetResultTerm.term.toString(),
           label: facetResultTerm.term.toString(),
-          count: facetResultTerm.count,
+          count: facetResultTerm.productCount,
           key: facetResultTerm.term.toString(),
           selected: facetQuery !== undefined && facetQuery.terms.includes(facetResultTerm.term.toString()),
         };

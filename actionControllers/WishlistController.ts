@@ -1,8 +1,8 @@
 import { ActionContext, Request, Response } from '@frontastic/extension-types';
+import { WishlistApi } from '../apis/WishlistApi';
 import { Guid } from '../utils/Guid';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
 import { getLocale } from '../utils/Request';
-import { WishlistApi } from '../apis/WishlistApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
