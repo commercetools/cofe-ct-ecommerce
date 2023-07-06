@@ -1,15 +1,16 @@
 import { Result } from '@commercetools/frontend-domain-types/product/Result';
-import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
+import { ProductMapper } from '../mappers/ProductMapper';
 import { Product } from '@commercetools/frontend-domain-types/product/Product';
+import { BaseApi } from './BaseApi';
 import { FilterField, FilterFieldTypes } from '@commercetools/frontend-domain-types/product/FilterField';
 import { FilterTypes } from '@commercetools/frontend-domain-types/query/Filter';
 import { TermFilter } from '@commercetools/frontend-domain-types/query/TermFilter';
 import { RangeFilter } from '@commercetools/frontend-domain-types/query/RangeFilter';
+import { CategoryQuery } from '../interfaces/CategoryQuery';
 import { Category } from '@commercetools/frontend-domain-types/product/Category';
 import { FacetDefinition } from '@commercetools/frontend-domain-types/product/FacetDefinition';
-import { ProductMapper } from '../mappers/ProductMapper';
-import { CategoryQuery } from '../interfaces/CategoryQuery';
-import { BaseApi } from './BaseApi';
+import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
+import { Inventory } from '../interfaces/Inventory';
 
 export class ProductApi extends BaseApi {
   protected getOffsetFromCursor = (cursor: string) => {
@@ -19,6 +20,14 @@ export class ProductApi extends BaseApi {
 
     const offsetMach = cursor.match(/(?<=offset:).+/);
     return offsetMach !== null ? +Object.values(offsetMach)[0] : undefined;
+  };
+
+  getInventory: (sku: string) => Promise<Inventory> = async (sku: string) => {
+    return await this.getApiForProject()
+      .inventory()
+      .get({ queryArgs: { where: `sku="${sku}"` } })
+      .execute()
+      .then((res) => ProductMapper.commercetoolsInventoryToInventory(res.body.results?.[0]));
   };
 
   query: (productQuery: ProductQuery) => Promise<Result> = async (productQuery: ProductQuery) => {
@@ -36,6 +45,10 @@ export class ProductApi extends BaseApi {
         ...ProductMapper.commercetoolsProductTypesToFacetDefinitions(await this.getProductTypes(), locale),
         // Include Scoped Price facet
         {
+          attributeId: 'categories.id',
+          attributeType: 'text',
+        },
+        {
           attributeId: 'variants.scopedPrice.value',
           attributeType: 'money',
         },
@@ -43,6 +56,10 @@ export class ProductApi extends BaseApi {
         {
           attributeId: 'variants.price',
           attributeType: 'money',
+        },
+        {
+          attributeId: 'variants.scopedPriceDiscounted',
+          attributeType: 'boolean',
         },
       ];
 
@@ -56,8 +73,9 @@ export class ProductApi extends BaseApi {
         filterQuery.push(`variants.sku:"${productQuery.skus.join('","')}"`);
       }
 
-      if (productQuery.category !== undefined && productQuery.category !== '') {
-        filterQuery.push(`categories.id:subtree("${productQuery.category}")`);
+      if (productQuery.categories !== undefined && productQuery.categories.length !== 0) {
+        const categoryIds = productQuery.categories.map((category) => `subtree("${category}")`);
+        filterQuery.push(`categories.id: ${categoryIds.join(', ')}`);
       }
 
       if (productQuery.filters !== undefined) {
@@ -96,6 +114,11 @@ export class ProductApi extends BaseApi {
         Object.keys(productQuery.sortAttributes).map((field, directionIndex) => {
           sortAttributes.push(`${field} ${Object.values(productQuery.sortAttributes)[directionIndex]}`);
         });
+      } else {
+        // By default, in CoCo, search results are sorted descending by their relevancy with respect to the provided
+        // text (that is their “score”). Sorting by score and then by id will ensure consistent products order
+        // across several search requests for products that have the same relevance score.
+        sortAttributes.push(`score desc`, `id desc`);
       }
 
       const methodArgs = {
@@ -189,7 +212,10 @@ export class ProductApi extends BaseApi {
     }
   };
 
-  queryCategories: (categoryQuery: CategoryQuery) => Promise<Result> = async (categoryQuery: CategoryQuery) => {
+  queryCategories: (categoryQuery: CategoryQuery, considerId?: boolean) => Promise<Result> = async (
+    categoryQuery: CategoryQuery,
+    considerId = false,
+  ) => {
     try {
       const locale = await this.getCommercetoolsLocal();
 
@@ -198,7 +224,8 @@ export class ProductApi extends BaseApi {
       const where: string[] = [];
 
       if (categoryQuery.slug) {
-        where.push(`slug(${locale.language}="${categoryQuery.slug}")`);
+        if (considerId) where.push(`slug(${locale.language}="${categoryQuery.slug}") or id="${categoryQuery.slug}"`);
+        else where.push(`slug(${locale.language}="${categoryQuery.slug}")`);
       }
 
       if (categoryQuery.parentId) {
@@ -228,18 +255,20 @@ export class ProductApi extends BaseApi {
           }
 
           for (let i = 0; i < categories.length; i++) {
-            if (categories[i].parent && nodes[categories[i].parent.id]?.subCategories) {
+            if (categories[i].parent && nodes[categories[i].parent.id]) {
               nodes[categories[i].parent.id].subCategories.push(categories[i]);
             }
+
+            for (const ancestor of categories[i].ancestors)
+              (ancestor.obj as any) = categories.find((category) => category.id === ancestor.id);
           }
+
           const nodesQueue = [categories];
 
           while (nodesQueue.length > 0) {
             const currentCategories = nodesQueue.pop();
             currentCategories.sort((a, b) => +b.orderHint - +a.orderHint);
-            currentCategories.forEach(
-              (category) => !!nodes[category.id]?.subCategories && nodesQueue.push(nodes[category.id].subCategories),
-            );
+            currentCategories.forEach((category) => nodesQueue.push(nodes[category.id].subCategories));
           }
 
           const items = categories.map((category) => ProductMapper.commercetoolsCategoryToCategory(category, locale));
@@ -260,7 +289,8 @@ export class ProductApi extends BaseApi {
           return result;
         })
         .catch((error) => {
-          throw error;
+          if (!considerId) throw error;
+          return this.queryCategories(categoryQuery, false);
         });
     } catch (error) {
       //TODO: better error, get status code etc...

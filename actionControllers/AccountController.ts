@@ -1,19 +1,16 @@
 import { Request, Response } from '@frontastic/extension-types';
 import { ActionContext } from '@frontastic/extension-types';
+import { AccountApi } from '../apis/AccountApi';
 import { AccountExtended as Account } from '../interfaces/AccountExtended';
 import { Address } from '@commercetools/frontend-domain-types/account/Address';
 import { CartFetcher } from '../utils/CartFetcher';
 import { getLocale } from '../utils/Request';
 import { AccountAuthenticationError } from '../errors/AccountAuthenticationError';
-import { assertIsAuthenticated } from '../utils/assertIsAuthenticated';
-import { mapRequestToAccount } from '../utils/mapRequestToAccount';
-import { fetchAccountFromSession } from '../utils/fetchAccountFromSession';
-import { AccountApi } from '../apis/AccountApi';
 import { EmailApi } from '../apis/EmailApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
-export type AccountRegisterBody = {
+type AccountRegisterBody = {
   email?: string;
   password?: string;
   salutation?: string;
@@ -73,16 +70,72 @@ async function loginAccount(request: Request, actionContext: ActionContext, acco
   return response;
 }
 
+function assertIsAuthenticated(request: Request) {
+  const account = fetchAccountFromSession(request);
+
+  if (account === undefined) {
+    throw new AccountAuthenticationError({ message: 'Not logged in.' });
+  }
+}
+
+function fetchAccountFromSession(request: Request): Account | undefined {
+  if (request.sessionData?.account !== undefined) {
+    return request.sessionData.account;
+  }
+
+  return undefined;
+}
+
+function parseBirthday(accountRegisterBody: AccountRegisterBody): Date | undefined {
+  if (accountRegisterBody.birthdayYear) {
+    return new Date(
+      +accountRegisterBody.birthdayYear,
+      +accountRegisterBody?.birthdayMonth ?? 1,
+      +accountRegisterBody?.birthdayDay ?? 1,
+    );
+  }
+
+  return null;
+}
+
+function mapRequestToAccount(accountRegisterBody: AccountRegisterBody): Account {
+  const account: Account = {
+    email: accountRegisterBody?.email,
+    password: accountRegisterBody?.password,
+    salutation: accountRegisterBody?.salutation,
+    firstName: accountRegisterBody?.firstName,
+    lastName: accountRegisterBody?.lastName,
+    birthday: parseBirthday(accountRegisterBody),
+    isSubscribed: accountRegisterBody?.isSubscribed,
+    addresses: [],
+  };
+
+  if (accountRegisterBody.billingAddress) {
+    accountRegisterBody.billingAddress.isDefaultBillingAddress = true;
+    accountRegisterBody.billingAddress.isDefaultShippingAddress = !(accountRegisterBody.shippingAddress !== undefined);
+
+    account.addresses.push(accountRegisterBody.billingAddress);
+  }
+
+  if (accountRegisterBody.shippingAddress) {
+    accountRegisterBody.shippingAddress.isDefaultShippingAddress = true;
+    accountRegisterBody.shippingAddress.isDefaultBillingAddress = !(accountRegisterBody.billingAddress !== undefined);
+
+    account.addresses.push(accountRegisterBody.shippingAddress);
+  }
+
+  return account;
+}
+
 export const getAccount: ActionHook = async (request: Request) => {
   const account = fetchAccountFromSession(request);
 
   if (account === undefined) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        loggedIn: false,
-      }),
+    const response: Response = {
+      statusCode: 401,
+      body: JSON.stringify('not logged in'),
     };
+    return response;
   }
 
   const response: Response = {
@@ -104,30 +157,37 @@ export const register: ActionHook = async (request: Request, actionContext: Acti
   const locale = getLocale(request);
 
   const accountApi = new AccountApi(actionContext.frontasticContext, locale);
-  const accountData = mapRequestToAccount(JSON.parse(request.body).account);
+  const accountData = mapRequestToAccount(JSON.parse(request.body));
 
   const cart = await CartFetcher.fetchCart(request, actionContext);
 
-  const account = await accountApi.create(accountData, cart);
+  try {
+    const account = await accountApi.create(accountData, cart);
 
-  if (EmailApi) {
-    const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
+    if (EmailApi) {
+      const emailApi = EmailApi.getDefaultApi(actionContext.frontasticContext, locale);
 
-    emailApi.sendWelcomeCustomerEmail(account);
+      emailApi.sendWelcomeCustomerEmail(account);
 
-    emailApi.sendAccountVerificationEmail(account);
+      emailApi.sendAccountVerificationEmail(account);
+    }
+
+    const response: Response = {
+      statusCode: 200,
+      body: JSON.stringify(account),
+      sessionData: {
+        ...request.sessionData,
+      },
+    };
+
+    return response;
+  } catch (error: any) {
+    const response: Response = {
+      statusCode: 401,
+      body: JSON.stringify(error.message),
+    };
+    return response;
   }
-
-  const response: Response = {
-    statusCode: 200,
-    //body: JSON.stringify(account),
-    body: JSON.stringify(account),
-    sessionData: {
-      ...request.sessionData,
-    },
-  };
-
-  return response;
 };
 
 export const requestConfirmationEmail: ActionHook = async (request: Request, actionContext: ActionContext) => {
@@ -371,7 +431,7 @@ export const addAddress: ActionHook = async (request: Request, actionContext: Ac
 
   let account = fetchAccountFromSession(request);
 
-  const address: Address = JSON.parse(request.body).address;
+  const address: Address = JSON.parse(request.body);
 
   const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
 
@@ -434,7 +494,7 @@ export const updateAddress: ActionHook = async (request: Request, actionContext:
 
   let account = fetchAccountFromSession(request);
 
-  const address: Address = JSON.parse(request.body).address;
+  const address: Address = JSON.parse(request.body);
 
   const accountApi = new AccountApi(actionContext.frontasticContext, getLocale(request));
 

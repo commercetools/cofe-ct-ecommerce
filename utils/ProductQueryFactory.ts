@@ -15,6 +15,7 @@ export class ProductQueryFactory {
     const productQuery: ProductQuery = {
       productIds: [],
       skus: [],
+      categories: [],
     };
 
     // Selected ID/SKUs filter from the studio
@@ -49,7 +50,7 @@ export class ProductQueryFactory {
      *
      * Category could be overwritten by category configuration from Frontastic Studio
      */
-    productQuery.category = queryParams?.category || undefined;
+    if (queryParams.categories?.[0]) productQuery.categories = queryParams.categories[0].split(',');
 
     /**
      * Map productIds
@@ -86,7 +87,7 @@ export class ProductQueryFactory {
       for ([key, configFilterData] of Object.entries(configFiltersData)) {
         if (configFilterData?.field === 'categoryId') {
           // Overwrite category with any value that has been set from Frontastic Studio
-          productQuery.category = configFilterData.values[0]; // TODO: should change if category is a single value
+          productQuery.categories = [configFilterData.values[0]]; // TODO: should change if category is a single value
           continue;
         }
 
@@ -158,7 +159,7 @@ export class ProductQueryFactory {
     return productQuery;
   }
 
-  protected static queryParamsToFacets(queryParams: any) {
+  private static queryParamsToFacets(queryParams: any) {
     const facets: Facet[] = [];
     let key: any;
     let facetData: any;
@@ -200,7 +201,7 @@ export class ProductQueryFactory {
     return facets;
   }
 
-  protected static mergeProductFiltersAndValues(queryParams: any) {
+  private static mergeProductFiltersAndValues(queryParams: any) {
     const filtersData: any[] = [];
 
     if (queryParams?.productFilters?.filters === undefined) {
@@ -228,7 +229,7 @@ export class ProductQueryFactory {
     return filtersData;
   }
 
-  protected static mergeCategoryFiltersAndValues(queryParams: any) {
+  private static mergeCategoryFiltersAndValues(queryParams: any) {
     const filtersData: any[] = [];
 
     if (queryParams?.categoryFilters?.filters === undefined) {

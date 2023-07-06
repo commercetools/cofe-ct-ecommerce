@@ -50,9 +50,9 @@ export class AccountMapper {
           state: commercetoolsAddress.state ?? undefined,
           phone: commercetoolsAddress.phone ?? undefined,
           isDefaultBillingAddress: commercetoolsAddress.id === commercetoolsCustomer.defaultBillingAddressId,
-          isBillingAddress: commercetoolsCustomer.billingAddressIds.includes(commercetoolsAddress.id),
+          isBillingAddress: commercetoolsCustomer.billingAddressIds?.includes(commercetoolsAddress.id  || ''),
           isDefaultShippingAddress: commercetoolsAddress.id === commercetoolsCustomer.defaultShippingAddressId,
-          isShippingAddress: commercetoolsCustomer.shippingAddressIds.includes(commercetoolsAddress.id),
+          isShippingAddress: commercetoolsCustomer.shippingAddressIds?.includes(commercetoolsAddress.id || ''),
         } as Address);
       });
 

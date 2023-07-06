@@ -86,3 +86,19 @@ export const searchableAttributes: ActionHook = async (request: Request, actionC
 
   return response;
 };
+
+export const getInventory: ActionHook = async (request: Request, actionContext: ActionContext) => {
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+
+  const sku = request.query.sku;
+
+  const data = await productApi.getInventory(sku);
+
+  const response: Response = {
+    statusCode: 200,
+    body: JSON.stringify(data),
+    sessionData: request.sessionData,
+  };
+
+  return response;
+};

@@ -15,7 +15,7 @@ export const getLocale = (request: Request): string => {
 };
 
 export const getCountry = (locale: string) => {
-  return { de_DE: 'DE', en_GB: 'GB', 'de_DE@EUR': 'DE', 'en_GB@GBP': 'GB' }[locale];
+  return { de_DE: 'DE', en_GB: 'GB', en_US: 'US', 'de_DE@EUR': 'DE', 'en_GB@GBP': 'GB', 'en_US@USD': 'US' }[locale];
 };
 
 const getHeader = (request: Request, header: string): string | null => {
