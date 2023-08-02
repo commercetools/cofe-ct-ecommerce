@@ -14,7 +14,7 @@ import { CartRedeemDiscountCodeError } from '../errors/CartRedeemDiscountCodeErr
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
 async function updateCartFromRequest(request: Request, actionContext: ActionContext): Promise<Cart> {
-  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request));
+  const cartApi = new CartApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
   let cart = await CartFetcher.fetchCart(request, actionContext);
 
   if (request?.body === undefined || request?.body === '') {
