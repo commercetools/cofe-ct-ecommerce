@@ -409,8 +409,10 @@ export abstract class BaseApi {
   protected clientHashKey: string;
   protected token: Token;
   protected currency: string;
+  protected frontasticContext: Context;
 
   constructor(frontasticContext: Context, locale: string | null, currency: string | null) {
+    this.frontasticContext = frontasticContext;
     this.defaultLocale = frontasticContext.project.defaultLocale;
     this.defaultCurrency = defaultCurrency;
 
