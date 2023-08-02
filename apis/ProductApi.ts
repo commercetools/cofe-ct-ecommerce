@@ -23,7 +23,7 @@ export class ProductApi extends BaseApi {
   };
 
   getInventory: (sku: string) => Promise<Inventory> = async (sku: string) => {
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .inventory()
       .get({ queryArgs: { where: `sku="${sku}"` } })
       .execute()
@@ -137,7 +137,7 @@ export class ProductApi extends BaseApi {
         },
       };
 
-      return await this.getApiForProject()
+      return await this.requestBuilder()
         .productProjections()
         .search()
         .get(methodArgs)
@@ -187,7 +187,7 @@ export class ProductApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
 
-      const response = await this.getApiForProject().productTypes().get().execute();
+      const response = await this.requestBuilder().productTypes().get().execute();
 
       const filterFields = ProductMapper.commercetoolsProductTypesToFilterFields(response.body.results, locale);
 
@@ -240,7 +240,7 @@ export class ProductApi extends BaseApi {
         },
       };
 
-      return await this.getApiForProject()
+      return await this.requestBuilder()
         .categories()
         .get(methodArgs)
         .execute()

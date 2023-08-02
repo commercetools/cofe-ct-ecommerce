@@ -13,7 +13,7 @@ export class WishlistApi extends BaseApi {
   getById = async (wishlistId: string) => {
     try {
       const locale = await this.getCommercetoolsLocal();
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlistId })
         .get({
@@ -32,7 +32,7 @@ export class WishlistApi extends BaseApi {
   getForAccount = async (accountId: string) => {
     try {
       const locale = await this.getCommercetoolsLocal();
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .get({
           queryArgs: {
@@ -53,7 +53,7 @@ export class WishlistApi extends BaseApi {
   getByIdForAccount = async (wishlistId: string, accountId: string) => {
     try {
       const locale = await this.getCommercetoolsLocal();
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlistId })
         .get({
@@ -74,7 +74,7 @@ export class WishlistApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
       const body = WishlistMapper.wishlistToCommercetoolsShoppingListDraft(wishlist, locale);
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .post({
           body: body,
@@ -94,7 +94,7 @@ export class WishlistApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
 
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlist.wishlistId })
         .post({
@@ -124,7 +124,7 @@ export class WishlistApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
 
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlist.wishlistId })
         .post({
@@ -153,7 +153,7 @@ export class WishlistApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
 
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlist.wishlistId })
         .delete({
@@ -173,7 +173,7 @@ export class WishlistApi extends BaseApi {
     try {
       const locale = await this.getCommercetoolsLocal();
 
-      const response = await this.getApiForProject()
+      const response = await this.requestBuilder()
         .shoppingLists()
         .withId({ ID: wishlist.wishlistId })
         .post({
