@@ -10,7 +10,7 @@ import { ClientConfig } from '../interfaces/ClientConfig';
 import { Token } from '../interfaces/Token';
 import { tokenHasExpired } from '../utils/Token';
 import crypto from 'crypto';
-import { Locale } from 'interfaces/Locale';
+import { Locale } from '../interfaces/Locale';
 
 const defaultCurrency = 'EUR';
 
