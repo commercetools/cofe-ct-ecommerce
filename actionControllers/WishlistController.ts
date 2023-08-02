@@ -2,12 +2,12 @@ import { ActionContext, Request, Response } from '@frontastic/extension-types';
 import { WishlistApi } from '../apis/WishlistApi';
 import { Guid } from '../utils/Guid';
 import { Account } from '@commercetools/frontend-domain-types/account/Account';
-import { getLocale } from '../utils/Request';
+import { getCurrency, getLocale } from '../utils/Request';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
 function getWishlistApi(request: Request, actionContext: ActionContext) {
-  return new WishlistApi(actionContext.frontasticContext, getLocale(request));
+  return new WishlistApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 }
 
 function fetchAccountFromSession(request: Request): Account | undefined {
