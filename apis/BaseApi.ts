@@ -2,7 +2,6 @@ import { ApiRoot, createApiBuilderFromCtpClient, Project, ProductType } from '@c
 import { ClientFactory } from '../ClientFactory';
 import { Context } from '@frontastic/extension-types';
 import { getConfig } from '../utils/GetConfig';
-import { Locale } from '../Locale';
 import { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk/dist/declarations/src/generated/client/by-project-key-request-builder';
 import { LocaleError } from '../errors/LocaleError';
 import { ExternalError } from '../utils/Errors';
@@ -11,6 +10,7 @@ import { ClientConfig } from '../interfaces/ClientConfig';
 import { Token } from '../interfaces/Token';
 import { tokenHasExpired } from '../utils/Token';
 import crypto from 'crypto';
+import { Locale } from 'interfaces/Locale';
 
 const defaultCurrency = 'EUR';
 
