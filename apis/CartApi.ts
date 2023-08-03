@@ -49,7 +49,7 @@ export class CartApi extends BaseApi {
   getForUser: (account: Account) => Promise<Cart> = async (account: Account) => {
     const locale = await this.getCommercetoolsLocal();
 
-    const response = await this.getApiForProject()
+    const response = await this.requestBuilder()
       .carts()
       .get({
         queryArgs: {
@@ -79,7 +79,7 @@ export class CartApi extends BaseApi {
       inventoryMode: 'ReserveOnOrder',
     };
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .carts()
       .post({
         queryArgs: {
@@ -103,7 +103,7 @@ export class CartApi extends BaseApi {
   getAnonymous: (anonymousId: string) => Promise<Cart> = async (anonymousId: string) => {
     const locale = await this.getCommercetoolsLocal();
 
-    const response = await this.getApiForProject()
+    const response = await this.requestBuilder()
       .carts()
       .get({
         queryArgs: {
@@ -134,7 +134,7 @@ export class CartApi extends BaseApi {
       inventoryMode: 'ReserveOnOrder',
     };
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .carts()
       .post({
         queryArgs: {
@@ -158,7 +158,7 @@ export class CartApi extends BaseApi {
   getById: (cartId: string) => Promise<Cart> = async (cartId: string) => {
     const locale = await this.getCommercetoolsLocal();
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .carts()
       .withId({
         ID: cartId,
@@ -333,7 +333,7 @@ export class CartApi extends BaseApi {
       throw new CartNotCompleteError({ message: 'Cart not complete yet.' });
     }
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .orders()
       .post({
         queryArgs: {
@@ -357,7 +357,7 @@ export class CartApi extends BaseApi {
   getOrder: (orderId: Order['orderId']) => Promise<Order> = async (orderId: Order['orderId']) => {
     const locale = await this.getCommercetoolsLocal();
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .orders()
       .withOrderNumber({ orderNumber: orderId })
       .get({
@@ -381,7 +381,7 @@ export class CartApi extends BaseApi {
   getOrders: (account: Account) => Promise<Order[]> = async (account: Account) => {
     const locale = await this.getCommercetoolsLocal();
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .orders()
       .get({
         queryArgs: {
@@ -413,11 +413,11 @@ export class CartApi extends BaseApi {
       },
     };
 
-    let requestBuilder = this.getApiForProject().shippingMethods().get(methodArgs);
+    let requestBuilder = this.requestBuilder().shippingMethods().get(methodArgs);
 
     if (onlyMatching) {
       methodArgs.queryArgs.country = locale.country;
-      requestBuilder = this.getApiForProject().shippingMethods().matchingLocation().get(methodArgs);
+      requestBuilder = this.requestBuilder().shippingMethods().matchingLocation().get(methodArgs);
     }
 
     return await requestBuilder
@@ -435,7 +435,7 @@ export class CartApi extends BaseApi {
   getAvailableShippingMethods: (cart: Cart) => Promise<ShippingMethod[]> = async (cart: Cart) => {
     const locale = await this.getCommercetoolsLocal();
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .shippingMethods()
       .matchingCart()
       .get({
@@ -477,7 +477,7 @@ export class CartApi extends BaseApi {
       },
     };
 
-    const paymentResponse = await this.getApiForProject()
+    const paymentResponse = await this.requestBuilder()
       .payments()
       .post({
         body: paymentDraft,
@@ -538,7 +538,7 @@ export class CartApi extends BaseApi {
       return payment;
     }
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .payments()
       .withKey({
         key: originalPayment.id,
@@ -559,7 +559,7 @@ export class CartApi extends BaseApi {
   };
 
   getPayment: (paymentId: string) => Promise<any> = async (paymentId) => {
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .payments()
       .withId({
         ID: paymentId,
@@ -574,7 +574,7 @@ export class CartApi extends BaseApi {
   ) => Promise<Order> = async (orderNumber, payload) => {
     const locale = await this.getCommercetoolsLocal();
 
-    const order = await this.getApiForProject()
+    const order = await this.requestBuilder()
       .orders()
       .withOrderNumber({ orderNumber })
       .get()
@@ -609,7 +609,7 @@ export class CartApi extends BaseApi {
       });
     }
 
-    return this.getApiForProject()
+    return this.requestBuilder()
       .orders()
       .withOrderNumber({ orderNumber })
       .post({ body: { version: order.version, actions: orderUpdateActions } })
@@ -623,7 +623,7 @@ export class CartApi extends BaseApi {
   createPayment: (payload: PaymentDraft) => Promise<Payment> = async (payload) => {
     const locale = await this.getCommercetoolsLocal();
 
-    const payment = this.getApiForProject()
+    const payment = this.requestBuilder()
       .payments()
       .post({ body: payload })
       .execute()
@@ -680,7 +680,7 @@ export class CartApi extends BaseApi {
       });
     }
 
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .payments()
       .withId({
         ID: paymentId,
@@ -751,7 +751,7 @@ export class CartApi extends BaseApi {
   };
 
   protected async updateCart(cartId: string, cartUpdate: CartUpdate, locale: Locale): Promise<CommercetoolsCart> {
-    return await this.getApiForProject()
+    return await this.requestBuilder()
       .carts()
       .withId({
         ID: cartId,
@@ -869,7 +869,7 @@ export class CartApi extends BaseApi {
       }
     }
 
-    let replicatedCommercetoolsCart = await this.getApiForProject()
+    let replicatedCommercetoolsCart = await this.requestBuilder()
       .carts()
       .post({
         queryArgs: {
@@ -911,7 +911,7 @@ export class CartApi extends BaseApi {
     }
 
     // Delete previous cart
-    await this.getApiForProject()
+    await this.requestBuilder()
       .carts()
       .withId({
         ID: primaryCartId,

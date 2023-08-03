@@ -3,7 +3,7 @@ import { Context, Request } from '@frontastic/extension-types';
 import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
 import { ProductApi } from '../apis/ProductApi';
 import { LineItem } from '@commercetools/frontend-domain-types/cart/LineItem';
-import { getPath, getLocale } from './Request';
+import { getPath, getLocale, getCurrency } from './Request';
 import { LineItem as WishlistItem } from '@commercetools/frontend-domain-types/wishlist/LineItem';
 
 export class ProductRouter {
@@ -27,7 +27,7 @@ export class ProductRouter {
   }
 
   static async loadFor(request: Request, frontasticContext: Context): Promise<Product> {
-    const productApi = new ProductApi(frontasticContext, getLocale(request));
+    const productApi = new ProductApi(frontasticContext, getLocale(request), getCurrency(request));
 
     const urlMatches = getPath(request)?.match(/\/p\/([^\/]+)/);
 

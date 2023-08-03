@@ -1,3 +1,5 @@
+# 2.0.0
+- Multitenancy configuration
 # 1.1.0
 - Update @commercetools/platform-sdk dependency to 4.10.1
 - Frontend sdk ready 

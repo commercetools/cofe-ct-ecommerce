@@ -2,11 +2,20 @@ import { ApiRoot, createApiBuilderFromCtpClient, Project, ProductType } from '@c
 import { ClientFactory } from '../ClientFactory';
 import { Context } from '@frontastic/extension-types';
 import { getConfig } from '../utils/GetConfig';
-import { Locale } from '../interfaces/Locale';
 import { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk/dist/declarations/src/generated/client/by-project-key-request-builder';
+import { LocaleError } from '../errors/LocaleError';
+import { ExternalError } from '../utils/Errors';
+import { TokenCache, TokenStore } from '@commercetools/sdk-client-v2';
+import { ClientConfig } from '../interfaces/ClientConfig';
+import { Token } from '../interfaces/Token';
+import { tokenHasExpired } from '../utils/Token';
+import crypto from 'crypto';
+import { Locale } from '../interfaces/Locale';
+
+const defaultCurrency = 'EUR';
 
 const localeRegex =
-  /^(?<language>[a-z]{2,})(?:_(?<territory>[A-Z]{2,}))?(?:\.(?<codeset>[A-Z0-9_+-]+))?(?:@(?<modifier>[A-Za-z]+))?$/;
+  /^(?<language>[a-z]{2,})(?:_(?<territory>[A-Z0-9]{2,}))?(?:\.(?<codeset>[A-Z0-9_+-]+))?(?:@(?<modifier>[A-Za-z]+))?$/;
 
 const languageToTerritory = {
   en: 'GB',
@@ -272,11 +281,11 @@ interface ParsedLocale {
   currency: string;
 }
 
-const parseLocale = (locale: string): ParsedLocale => {
+const parseLocale = (locale: string, currency?: string): ParsedLocale => {
   const matches = locale.match(localeRegex);
 
   if (matches === null) {
-    throw new Error(`Invalid locale: ${locale}`);
+    throw new LocaleError({ message: `Invalid locale: ${locale}` });
   }
 
   const language = matches.groups.language;
@@ -290,25 +299,25 @@ const parseLocale = (locale: string): ParsedLocale => {
     }
   }
 
-  let currency: undefined | string = undefined;
+  if (!currency) {
+    currency = defaultCurrency;
 
-  const modifier = matches.groups.modifier;
-  if (modifier !== undefined) {
-    if (modifier in modifierToCurrency) {
-      currency = modifierToCurrency[modifier];
-    } else {
-      const foundCurrency = Object.values(territoryToCurrency).find((currency) => currency === modifier.toUpperCase());
-      if (foundCurrency !== undefined) {
-        currency = foundCurrency;
-      }
-    }
-  }
-
-  if (currency === undefined) {
     if (territory in territoryToCurrency) {
       currency = territoryToCurrency[territory];
-    } else {
-      currency = 'EUR';
+    }
+
+    const modifier = matches.groups.modifier;
+    if (modifier !== undefined) {
+      if (modifier in modifierToCurrency) {
+        currency = modifierToCurrency[modifier];
+      } else {
+        const foundCurrency = Object.values(territoryToCurrency).find(
+          (currency) => currency === modifier.toUpperCase(),
+        );
+        if (foundCurrency !== undefined) {
+          currency = foundCurrency;
+        }
+      }
     }
   }
 
@@ -339,7 +348,7 @@ const pickCandidate = (candidates: string[], availableOptions: string[]): string
   return undefined;
 };
 
-const pickCommercetoolsLanguage = (parsedLocale: ParsedLocale, availableLanguages: string[]) => {
+const pickCommercetoolsLanguage = (parsedLocale: ParsedLocale, availableLanguages: string[]): string | undefined => {
   const candidates = [`${parsedLocale.language}-${parsedLocale.territory}`, parsedLocale.language];
 
   const foundCandidate = pickCandidate(candidates, availableLanguages);
@@ -353,10 +362,14 @@ const pickCommercetoolsLanguage = (parsedLocale: ParsedLocale, availableLanguage
     return foundPrefix;
   }
 
-  return availableLanguages[0];
+  return undefined;
 };
 
-const pickCommercetoolsCountry = (parsedLocale: ParsedLocale, language: string, availableCountries: string[]) => {
+const pickCommercetoolsCountry = (
+  parsedLocale: ParsedLocale,
+  language: string,
+  availableCountries: string[],
+): string | undefined => {
   const candidates = [parsedLocale.territory, parsedLocale.language, language];
 
   const foundCandidate = pickCandidate(candidates, availableCountries);
@@ -364,10 +377,10 @@ const pickCommercetoolsCountry = (parsedLocale: ParsedLocale, language: string, 
     return foundCandidate;
   }
 
-  return availableCountries[0];
+  return undefined;
 };
 
-const pickCommercetoolsCurrency = (parsedLocale: ParsedLocale, availableCurrencies: string[]) => {
+const pickCommercetoolsCurrency = (parsedLocale: ParsedLocale, availableCurrencies: string[]): string | undefined => {
   const candidates = [
     parsedLocale.currency,
     parseLocale(`${parsedLocale.language}_${parsedLocale.territory}`).currency,
@@ -378,38 +391,136 @@ const pickCommercetoolsCurrency = (parsedLocale: ParsedLocale, availableCurrenci
     return foundCandidate;
   }
 
-  return availableCurrencies[0];
+  return undefined;
 };
+
+const clientTokensStored = new Map<string, Token>();
 
 export abstract class BaseApi {
   protected apiRoot: ApiRoot;
+  protected clientSettings: ClientConfig;
+  protected environment: string;
   protected projectKey: string;
+  protected productIdField: string;
+  protected categoryIdField: string;
   protected locale: string;
+  protected defaultLocale: string;
+  protected defaultCurrency: string;
+  protected clientHashKey: string;
+  protected token: Token;
+  protected currency: string;
   protected frontasticContext: Context;
 
-  constructor(frontasticContext: Context, locale: string) {
-    const engine = 'commercetools';
-    const clientSettings = getConfig(frontasticContext.project, engine, locale);
-    const client = ClientFactory.factor(clientSettings, frontasticContext.environment);
-
-    this.apiRoot = createApiBuilderFromCtpClient(client);
-    this.projectKey = clientSettings.projectKey;
-    this.locale = locale;
+  constructor(frontasticContext: Context, locale: string | null, currency: string | null) {
     this.frontasticContext = frontasticContext;
+    this.defaultLocale = frontasticContext.project.defaultLocale;
+    this.defaultCurrency = defaultCurrency;
+
+    this.locale = locale !== null ? locale : this.defaultLocale;
+    this.currency = currency;
+
+    this.clientSettings = getConfig(frontasticContext.projectConfiguration);
+
+    this.environment = frontasticContext.environment;
+    this.projectKey = this.clientSettings.projectKey;
+
+    this.token = clientTokensStored.get(this.getClientHashKey());
   }
 
-  protected getApiForProject(): ByProjectKeyRequestBuilder {
-    return this.apiRoot.withProjectKey({ projectKey: this.projectKey });
+  private commercetoolsTokenCache(): TokenCache {
+    return (() => {
+      const get = () => {
+        if (this.token === undefined) {
+          return undefined;
+        }
+
+        const tokenStore: TokenStore = {
+          token: this.token.token,
+          expirationTime: this.token.expirationTime,
+          refreshToken: this.token.refreshToken,
+        };
+
+        return tokenStore;
+      };
+
+      const set = (tokenStore: TokenStore) => {
+        this.token = {
+          token: tokenStore.token,
+          expirationTime: tokenStore.expirationTime,
+          refreshToken: tokenStore.refreshToken,
+        };
+        clientTokensStored.set(this.getClientHashKey(), this.token);
+      };
+
+      return { get, set };
+    })();
+  }
+
+  private getClientHashKey(): string {
+    if (this.clientHashKey) {
+      return this.clientHashKey;
+    }
+
+    this.clientHashKey = crypto
+      .createHash('md5')
+      .update(this.clientSettings.clientId + this.clientSettings.clientSecret + this.clientSettings.projectKey)
+      .digest('hex');
+
+    return this.clientHashKey;
+  }
+
+  private getApiRoot(): ApiRoot {
+    let refreshToken: string | undefined;
+    if (this.apiRoot && tokenHasExpired(this.token)) {
+      this.apiRoot = undefined;
+      refreshToken = this.token?.refreshToken;
+    }
+
+    if (this.apiRoot) {
+      return this.apiRoot;
+    }
+
+    const client = ClientFactory.factor(
+      this.clientSettings,
+      this.environment,
+      this.commercetoolsTokenCache(),
+      refreshToken,
+    );
+
+    this.apiRoot = createApiBuilderFromCtpClient(client);
+
+    return this.apiRoot;
+  }
+
+  protected requestBuilder(): ByProjectKeyRequestBuilder {
+    return this.getApiRoot().withProjectKey({ projectKey: this.projectKey });
   }
 
   protected async getCommercetoolsLocal(): Promise<Locale> {
-    const parsedLocale = parseLocale(this.locale);
+    const parsedLocale = parseLocale(this.locale, this.currency);
+    const parsedDefaultLocale = parseLocale(this.defaultLocale, this.currency);
+
     const project = await this.getProject();
 
-    const language = pickCommercetoolsLanguage(parsedLocale, project.languages);
-    const country = pickCommercetoolsCountry(parsedLocale, language, project.countries);
-    const currency = pickCommercetoolsCurrency(parsedLocale, project.currencies);
-
+    /**
+     * Get a valid locale following the priority of:
+     *
+     * 1. From requested locale
+     * 2. From default locale
+     * 3. First from the list of available ones
+     */
+    const language =
+      pickCommercetoolsLanguage(parsedLocale, project.languages) ??
+      pickCommercetoolsLanguage(parsedDefaultLocale, project.languages) ??
+      project.languages[0];
+    const country =
+      pickCommercetoolsCountry(parsedLocale, language, project.countries) ??
+      pickCommercetoolsCountry(parsedDefaultLocale, language, project.countries) ??
+      project.countries[0];
+    const currency =
+      pickCommercetoolsCurrency(parsedLocale, project.currencies) ??
+      pickCommercetoolsCurrency(parsedDefaultLocale, project.currencies) ??
+      project.currencies[0];
     return Promise.resolve({
       language,
       country,
@@ -422,21 +533,28 @@ export abstract class BaseApi {
 
     if (this.projectKey in productTypesCache) {
       const cacheEntry = productTypesCache[this.projectKey];
-      if (cacheEntry.expiryTime < now) {
+      if (now < cacheEntry.expiryTime) {
         return cacheEntry.productTypes;
       }
     }
 
-    const response = await this.getApiForProject().productTypes().get().execute();
+    return await this.requestBuilder()
+      .productTypes()
+      .get()
+      .execute()
+      .then((response) => {
+        const productTypes = response.body.results;
 
-    const productTypes = response.body.results;
+        productTypesCache[this.projectKey] = {
+          productTypes,
+          expiryTime: new Date(now.getMilliseconds() + projectCacheTtlMilliseconds),
+        };
 
-    productTypesCache[this.projectKey] = {
-      productTypes,
-      expiryTime: new Date(now.getMilliseconds() + projectCacheTtlMilliseconds),
-    };
-
-    return productTypes;
+        return productTypes;
+      })
+      .catch((error) => {
+        throw new ExternalError({ status: error.code, message: error.message, body: error.body });
+      });
   }
 
   protected async getProject() {
@@ -444,12 +562,17 @@ export abstract class BaseApi {
 
     if (this.projectKey in projectCache) {
       const cacheEntry = projectCache[this.projectKey];
-      if (cacheEntry.expiryTime < now) {
+      if (now < cacheEntry.expiryTime) {
         return cacheEntry.project;
       }
     }
 
-    const response = await this.getApiForProject().get().execute();
+    const response = await this.requestBuilder()
+      .get()
+      .execute()
+      .catch((error) => {
+        throw new ExternalError({ status: error.code, message: error.message, body: error.body });
+      });
     const project = response.body;
 
     projectCache[this.projectKey] = {

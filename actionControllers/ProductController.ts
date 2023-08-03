@@ -3,13 +3,13 @@ import { ActionContext } from '@frontastic/extension-types';
 import { ProductQueryFactory } from '../utils/ProductQueryFactory';
 import { ProductQuery } from '@commercetools/frontend-domain-types/query/ProductQuery';
 import { CategoryQuery } from '../interfaces/CategoryQuery';
-import { getLocale } from '../utils/Request';
+import { getCurrency, getLocale } from '../utils/Request';
 import { ProductApi } from '../apis/ProductApi';
 
 type ActionHook = (request: Request, actionContext: ActionContext) => Promise<Response>;
 
 export const getProduct: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 
   let productQuery: ProductQuery = {};
 
@@ -37,7 +37,7 @@ export const getProduct: ActionHook = async (request: Request, actionContext: Ac
 };
 
 export const query: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 
   const productQuery = ProductQueryFactory.queryFromParams(request);
 
@@ -53,7 +53,7 @@ export const query: ActionHook = async (request: Request, actionContext: ActionC
 };
 
 export const queryCategories: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 
   const categoryQuery: CategoryQuery = {
     limit: request.query?.limit ?? undefined,
@@ -74,7 +74,7 @@ export const queryCategories: ActionHook = async (request: Request, actionContex
 };
 
 export const searchableAttributes: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 
   const result = await productApi.getSearchableAttributes();
 
@@ -88,7 +88,7 @@ export const searchableAttributes: ActionHook = async (request: Request, actionC
 };
 
 export const getInventory: ActionHook = async (request: Request, actionContext: ActionContext) => {
-  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request));
+  const productApi = new ProductApi(actionContext.frontasticContext, getLocale(request), getCurrency(request));
 
   const sku = request.query.sku;
 
