@@ -1,3 +1,5 @@
+# 2.0.1
+- update dependencies
 # 2.0.0
 - Multitenancy configuration
 # 1.1.0
