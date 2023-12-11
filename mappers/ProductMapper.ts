@@ -149,6 +149,28 @@ export class ProductMapper {
     return categories;
   }
 
+  static commercetoolsCategoriesToTreeCategory(
+    commercetoolsCategories: CommercetoolsCategory[],
+    locale: Locale,
+  ) {
+    const nodes = {};
+
+    for (const category of commercetoolsCategories) {
+      (category as CommercetoolsCategory & { subCategories: CommercetoolsCategory[] }).subCategories = [];
+      nodes[category.id] = category;
+    }
+
+    for (const category of commercetoolsCategories) {
+      if (!category.parent?.id) continue;
+
+      nodes[category.parent.id].subCategories.push(category);
+    }
+
+    return commercetoolsCategories
+      .filter((category) => category.ancestors.length === 0)
+      .map((category) => this.commercetoolsCategoryToCategory(category, locale));
+  }
+
   static commercetoolsCategoryToCategory(commercetoolsCategory: CommercetoolsCategory, locale: Locale): Category {
     return {
       categoryId: commercetoolsCategory.id,
