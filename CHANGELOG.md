@@ -1,4 +1,4 @@
-# 2.0.2
+# 2.0.3
 - category tree mapper
 # 2.0.1
 - update dependencies

@@ -2,4 +2,5 @@ import { CategoryQuery as BaseCategoryQuery } from '@commercetools/frontend-doma
 
 export interface CategoryQuery extends BaseCategoryQuery {
   parentId?: string;
+  format?: 'tree' | 'flat';
 }
