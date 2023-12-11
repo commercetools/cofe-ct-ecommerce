@@ -245,33 +245,12 @@ export class ProductApi extends BaseApi {
         .get(methodArgs)
         .execute()
         .then((response) => {
-          const categories = response.body.results;
+          const items = categoryQuery.format === 'tree'
+            ? ProductMapper.commercetoolsCategoriesToTreeCategory(response.body.results, locale)
+            : response.body.results.map((category) =>
+                ProductMapper.commercetoolsCategoryToCategory(category, locale),
+              );
 
-          const nodes = {};
-
-          for (let i = 0; i < categories.length; i++) {
-            (categories[i] as any).subCategories = [];
-            nodes[categories[i].id] = categories[i];
-          }
-
-          for (let i = 0; i < categories.length; i++) {
-            if (categories[i].parent && nodes[categories[i].parent.id]) {
-              nodes[categories[i].parent.id].subCategories.push(categories[i]);
-            }
-
-            for (const ancestor of categories[i].ancestors)
-              (ancestor.obj as any) = categories.find((category) => category.id === ancestor.id);
-          }
-
-          const nodesQueue = [categories];
-
-          while (nodesQueue.length > 0) {
-            const currentCategories = nodesQueue.pop();
-            currentCategories.sort((a, b) => +b.orderHint - +a.orderHint);
-            currentCategories.forEach((category) => nodesQueue.push(nodes[category.id].subCategories));
-          }
-
-          const items = categories.map((category) => ProductMapper.commercetoolsCategoryToCategory(category, locale));
 
           const result: Result = {
             total: response.body.total,
